@@ -1,0 +1,2163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>My RV Journal</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#2563eb;--blue-lt:#EEF2FB;--blue-dk:#1e4fc2;--green:#16a34a;--green-lt:#DCFCE7;--red:#dc2626;--red-lt:#FEF2F2;--amber:#d97706;--amber-lt:#FFFBEB;--gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;--gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;--gray-600:#4b5563;--gray-700:#374151;--gray-800:#1f2937;--gray-900:#111827;--radius:14px;--radius-sm:10px;--shadow:0 1px 4px rgba(0,0,0,.08)}
+html,body{height:100%;background:var(--gray-50);font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--gray-900);overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+
+/* ── AUTH SCREENS ──────────────────────────────────────── */
+#auth-screen{display:none;min-height:100vh;background:linear-gradient(160deg,#1e40af 0%,#2563eb 50%,#3b82f6 100%);padding:0 20px;align-items:center;justify-content:center;flex-direction:column}
+#auth-screen.show{display:flex}
+.auth-logo{font-size:40px;margin-bottom:8px;text-align:center}
+.auth-title{font-size:24px;font-weight:800;color:#fff;text-align:center;margin-bottom:4px}
+.auth-sub{font-size:14px;color:rgba(255,255,255,.7);text-align:center;margin-bottom:32px}
+.auth-card{background:#fff;border-radius:20px;padding:24px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.auth-tabs{display:flex;gap:0;margin-bottom:24px;background:var(--gray-100);border-radius:10px;padding:4px}
+.auth-tab{flex:1;padding:8px;border:none;background:transparent;font-size:14px;font-weight:600;color:var(--gray-500);cursor:pointer;border-radius:8px;font-family:inherit;transition:all .15s}
+.auth-tab.on{background:#fff;color:var(--blue);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.auth-forgot{text-align:center;margin-top:12px}
+.auth-forgot button{background:none;border:none;font-size:13px;color:var(--blue);cursor:pointer;font-family:inherit}
+.auth-links{display:flex;justify-content:center;gap:12px;margin-top:16px}
+.auth-links button{background:none;border:none;font-size:12px;color:rgba(255,255,255,.7);cursor:pointer;font-family:inherit}
+
+/* ── FORGOT / RESET PW SCREEN ─────────────────────────── */
+#reset-screen{display:none;min-height:100vh;background:linear-gradient(160deg,#1e40af 0%,#2563eb 100%);padding:20px;align-items:center;justify-content:center;flex-direction:column}
+#reset-screen.show{display:flex}
+
+/* ── MAIN APP ──────────────────────────────────────────── */
+#app{display:none;max-width:500px;margin:0 auto;min-height:100vh;position:relative;background:var(--gray-50)}
+#app.show{display:block}
+
+/* ── HEADER ───────────────────────────────────────────── */
+#app-header{background:var(--blue);padding:14px 16px 0;position:sticky;top:0;z-index:100}
+.hdr-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.hdr-left{display:flex;align-items:center;gap:10px}
+.hdr-icon{width:34px;height:34px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.hdr-title{font-size:18px;font-weight:800;color:#fff}
+.hdr-sub{font-size:11px;color:rgba(255,255,255,.6)}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#4ade80}
+.sync-dot.saving{background:#fbbf24;animation:blink 1s infinite}
+.sync-dot.err{background:#f87171}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.nav-tabs{display:flex;gap:0}
+.nav-tab{flex:1;padding:10px 4px 10px;font-size:11px;font-weight:600;border:none;background:transparent;color:rgba(255,255,255,.55);border-bottom:3px solid transparent;cursor:pointer;font-family:inherit;transition:all .15s;letter-spacing:.01em}
+.nav-tab.on{color:#fff;border-bottom-color:#fff}
+
+/* ── PAGE CONTAINER ───────────────────────────────────── */
+.page{display:none;padding:16px 16px 80px}
+.page.show{display:block}
+.page-inner{max-width:468px;margin:0 auto}
+
+/* ── BACK BUTTON ──────────────────────────────────────── */
+.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--blue);background:none;border:none;cursor:pointer;font-family:inherit;padding:6px 0;margin-bottom:12px}
+.back-btn svg{width:16px;height:16px}
+
+/* ── CARDS ────────────────────────────────────────────── */
+.card{background:#fff;border:1.5px solid var(--gray-200);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.card-body{padding:16px}
+.card-tap{cursor:pointer;transition:transform .1s,box-shadow .1s}
+.card-tap:active{transform:scale(0.98);box-shadow:none}
+
+/* ── SECTION HEADER ───────────────────────────────────── */
+.sec-hdr{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--gray-500);margin:18px 0 8px;padding:0 2px}
+
+/* ── FORMS ────────────────────────────────────────────── */
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field:last-child{margin-bottom:0}
+.lbl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gray-500)}
+input[type=text],input[type=email],input[type=password],input[type=date],input[type=number],select,textarea{width:100%;padding:10px 12px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);font-size:14px;color:var(--gray-900);background:#fff;outline:none;font-family:inherit;-webkit-appearance:none;appearance:none;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+input::placeholder,textarea::placeholder{color:var(--gray-400)}
+textarea{resize:vertical;min-height:80px}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath fill='%236b7280' d='M5 7L0 0h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.err-msg{font-size:13px;color:var(--red);background:var(--red-lt);border-radius:8px;padding:8px 12px;margin-top:4px}
+.ok-msg{font-size:13px;color:var(--green);background:var(--green-lt);border-radius:8px;padding:8px 12px;margin-top:4px}
+
+/* ── BUTTONS ──────────────────────────────────────────── */
+.btn{border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;padding:11px 18px;font-family:inherit;transition:opacity .1s,transform .1s;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn:active{opacity:.8;transform:scale(0.98)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.pri{background:var(--blue);color:#fff}
+.btn.sec{background:transparent;color:var(--blue);border:1.5px solid var(--blue)}
+.btn.dan{background:transparent;color:var(--red);border:1.5px solid var(--red)}
+.btn.gho{background:transparent;color:var(--gray-600);border:1.5px solid var(--gray-300)}
+.btn.suc{background:var(--green);color:#fff}
+.btn.sm{font-size:12px;padding:7px 12px}
+.btn.lg{padding:14px 20px;font-size:15px}
+.btn.full{width:100%}
+.btn-row{display:flex;gap:8px}
+.btn-row .btn{flex:1}
+
+/* ── STATUS BADGE ─────────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.03em}
+.badge.planned{background:#EEF2FB;color:var(--blue)}
+.badge.active{background:#DCFCE7;color:var(--green)}
+.badge.completed{background:var(--gray-100);color:var(--gray-600)}
+
+/* ── STAR RATING ──────────────────────────────────────── */
+.stars{display:flex;gap:4px}
+.star{font-size:22px;cursor:pointer;line-height:1;transition:transform .1s}
+.star:active{transform:scale(1.2)}
+.star.sm{font-size:16px}
+.star.readonly{cursor:default}
+
+/* ── TOGGLE CHIPS ─────────────────────────────────────── */
+.toggle-btn{padding:8px 14px;border-radius:10px;border:1.5px solid var(--gray-200);background:#fff;font-size:13px;font-weight:500;color:var(--gray-600);cursor:pointer;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.toggle-btn.on{background:var(--blue-lt);border-color:var(--blue);color:var(--blue);font-weight:600}
+.toggle-btn:active{transform:scale(0.97)}
+.chip{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;background:var(--blue-lt);color:var(--blue);border:1px solid #c7d7f7}
+.toggles-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+
+/* ── READ ROWS ────────────────────────────────────────── */
+.read-row{margin-bottom:10px}
+.read-row:last-child{margin-bottom:0}
+.read-lbl{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--gray-400);margin-bottom:2px}
+.read-val{font-size:14px;color:var(--gray-800);white-space:pre-wrap}
+.read-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.read-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+/* ── COLLAPSIBLE SECTION ──────────────────────────────── */
+.coll{background:#fff;border:1.5px solid var(--gray-200);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.coll-hdr{width:100%;display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;color:var(--gray-800);text-align:left}
+.coll-hdr-left{display:flex;align-items:center;gap:8px;color:var(--gray-600)}
+.coll-icon{font-size:16px}
+.coll-chevron{transition:transform .2s;color:var(--gray-400);font-size:18px}
+.coll-chevron.open{transform:rotate(90deg)}
+.coll-body{display:none;padding:0 16px 16px;border-top:1px solid var(--gray-100)}
+.coll-body.open{display:block}
+.edit-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;border:1.5px solid #c7d7f7;background:var(--blue-lt);color:var(--blue);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:12px;transition:background .15s}
+.edit-btn:active{background:#dbeafe}
+.empty-msg{font-size:13px;color:var(--gray-400);font-style:italic;padding:4px 0}
+
+/* ── HOME PAGE ────────────────────────────────────────── */
+.trip-card{background:#fff;border:1.5px solid var(--gray-200);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:box-shadow .15s}
+.trip-card:active{transform:scale(0.98)}
+.trip-name{font-size:15px;font-weight:700;color:var(--gray-900);margin-bottom:3px}
+.trip-date{font-size:12px;color:var(--gray-500)}
+.trip-chevron{color:var(--gray-400);font-size:20px;flex-shrink:0}
+.search-wrap{position:relative;margin-bottom:14px}
+.search-wrap input{padding-left:36px}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gray-400);font-size:16px;pointer-events:none}
+.sort-row{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.sort-row select{flex:0 0 auto;width:auto;padding:8px 30px 8px 10px;font-size:13px}
+
+/* ── STOP CARD ────────────────────────────────────────── */
+.stop-card{background:#fff;border:1.5px solid var(--gray-200);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;justify-content:space-between}
+.stop-card:active{transform:scale(0.98)}
+.stop-name{font-size:14px;font-weight:600;color:var(--gray-900)}
+.stop-dates{font-size:12px;color:var(--gray-500);margin-top:2px}
+
+/* ── PHOTO GRID ───────────────────────────────────────── */
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.photo-thumb{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--gray-100)}
+.photo-thumb img{width:100%;height:100%;object-fit:cover}
+.photo-cover-badge{position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,.6);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px}
+.photo-actions{position:absolute;top:4px;right:4px;display:flex;gap:4px}
+.photo-action-btn{background:rgba(255,255,255,.9);border:none;border-radius:6px;padding:4px 6px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600}
+.cover-photo-hero{width:100%;height:200px;object-fit:cover;display:block}
+
+/* ── COVER HERO ───────────────────────────────────────── */
+.hero-wrap{position:relative;height:200px;background:var(--gray-200);overflow:hidden}
+.hero-wrap img{width:100%;height:100%;object-fit:cover}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.45) 0%,transparent 50%)}
+.hero-back{position:absolute;top:14px;left:14px}
+.hero-back .back-btn{color:#fff;background:rgba(0,0,0,.35);border-radius:20px;padding:6px 12px;margin:0;backdrop-filter:blur(4px)}
+
+/* ── WIZARD ───────────────────────────────────────────── */
+#wizard-screen{display:none;min-height:100vh;background:linear-gradient(135deg,#eff6ff 0%,#fff 50%,#f0f9ff 100%);flex-direction:column}
+#wizard-screen.show{display:flex}
+.wiz-progress-bar{height:5px;background:var(--gray-200)}
+.wiz-progress-fill{height:100%;background:var(--blue);transition:width .3s ease}
+.wiz-body{flex:1;display:flex;flex-direction:column;padding:24px 20px;max-width:460px;margin:0 auto;width:100%}
+.wiz-step-lbl{font-size:12px;font-weight:600;color:var(--blue);margin-bottom:12px}
+.wiz-content{flex:1;display:flex;flex-direction:column;justify-content:center}
+.wiz-h{font-size:24px;font-weight:800;color:var(--gray-900);margin-bottom:6px}
+.wiz-sub{font-size:14px;color:var(--gray-500);margin-bottom:24px}
+.wiz-nav{display:flex;gap:10px;margin-top:32px}
+.wiz-nav .btn{flex:1}
+.photo-drop{border:2px dashed var(--gray-300);border-radius:16px;padding:40px 20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+.photo-drop:hover{border-color:var(--blue);background:var(--blue-lt)}
+.photo-preview{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:16/9;background:var(--gray-100)}
+.photo-preview img{width:100%;height:100%;object-fit:cover}
+.photo-preview-rm{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.9);border:none;border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;font-weight:600}
+
+/* ── VEHICLE PAGE ─────────────────────────────────────── */
+.maint-entry{border:1.5px solid var(--gray-200);border-radius:10px;padding:12px;background:#fff;margin-bottom:8px}
+.maint-type{font-size:13px;font-weight:700;color:var(--gray-800)}
+.maint-date{font-size:12px;color:var(--gray-400);margin-left:6px}
+.maint-desc{font-size:13px;color:var(--gray-600);margin-top:4px}
+.maint-meta{font-size:12px;color:var(--gray-400);margin-top:4px;display:flex;gap:10px}
+
+/* ── SETTINGS ─────────────────────────────────────────── */
+.settings-row{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:background .1s;width:100%;border:none;background:transparent;font-family:inherit;text-align:left}
+.settings-row:active{background:var(--gray-50)}
+.settings-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.settings-label{font-size:15px;font-weight:600;color:var(--gray-800);flex:1}
+.settings-chevron{color:var(--gray-400);font-size:18px}
+.settings-expand{padding:0 16px 16px;border-top:1px solid var(--gray-100);background:#fff}
+
+/* ── FAB ──────────────────────────────────────────────── */
+#fab{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 70px);right:18px;width:52px;height:52px;border-radius:50%;background:var(--blue);color:#fff;border:none;font-size:26px;cursor:pointer;box-shadow:0 4px 16px rgba(37,99,235,.35);display:none;align-items:center;justify-content:center;z-index:90;transition:transform .15s}
+#fab:active{transform:scale(0.93)}
+#fab.show{display:flex}
+
+/* ── MODAL ────────────────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:flex-end;justify-content:center;padding:0}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:24px 24px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));width:100%;max-width:500px;max-height:85vh;overflow-y:auto}
+.modal-title{font-size:18px;font-weight:800;color:var(--gray-900);margin-bottom:18px}
+.modal-actions{display:flex;gap:8px;margin-top:20px}
+.modal-actions .btn{flex:1}
+
+/* ── CONFIRM DIALOG ───────────────────────────────────── */
+#confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:none;align-items:center;justify-content:center;padding:24px}
+#confirm-overlay.show{display:flex}
+.confirm-box{background:#fff;border-radius:18px;padding:24px;width:100%;max-width:300px;text-align:center}
+.confirm-title{font-size:16px;font-weight:800;color:var(--gray-900);margin-bottom:6px}
+.confirm-sub{font-size:13px;color:var(--gray-500);margin-bottom:20px}
+.confirm-btns{display:flex;gap:10px}
+.confirm-btns .btn{flex:1;padding:12px}
+
+/* ── TOAST ────────────────────────────────────────────── */
+#toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--gray-900);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:500;transition:transform .3s;white-space:nowrap}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ── LOADING / EMPTY ──────────────────────────────────── */
+.skeleton{background:var(--gray-200);border-radius:10px;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.empty-state{text-align:center;padding:60px 20px 40px}
+.empty-emoji{font-size:48px;margin-bottom:12px}
+.empty-title{font-size:18px;font-weight:700;color:var(--gray-700);margin-bottom:6px}
+.empty-sub{font-size:14px;color:var(--gray-500);margin-bottom:24px}
+
+/* ── FEEDBACK ─────────────────────────────────────────── */
+.feedback-success{text-align:center;padding:40px 20px}
+.feedback-success-icon{width:72px;height:72px;background:var(--green-lt);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:36px}
+
+/* ── STAY AGAIN BTNS ──────────────────────────────────── */
+.stay-btns{display:flex;gap:8px;margin-top:6px}
+.stay-btn{flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--gray-200);background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
+.stay-btn.yes.on{background:var(--green-lt);border-color:var(--green);color:var(--green)}
+.stay-btn.maybe.on{background:var(--amber-lt);border-color:var(--amber);color:var(--amber)}
+.stay-btn.no.on{background:var(--red-lt);border-color:var(--red);color:var(--red)}
+.stay-badge{display:inline-flex;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700}
+.stay-badge.yes{background:var(--green-lt);color:var(--green)}
+.stay-badge.maybe{background:var(--amber-lt);color:var(--amber)}
+.stay-badge.no{background:var(--red-lt);color:var(--red)}
+
+/* ── MISC ─────────────────────────────────────────────── */
+.divider{height:1px;background:var(--gray-200);margin:16px 0}
+.tag{display:inline-flex;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:var(--blue-lt);color:var(--blue);margin:2px}
+.plate{font-size:14px;font-weight:700;font-family:monospace;letter-spacing:.1em;background:var(--gray-100);padding:4px 10px;border-radius:6px}
+.fade-in{animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- ══ AUTH SCREEN ══════════════════════════════════════ -->
+<div id="auth-screen">
+  <div class="auth-logo">🏕️</div>
+  <div class="auth-title">My RV Journal</div>
+  <div class="auth-sub">Your personal travel archive</div>
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <button class="auth-tab on" onclick="authTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="authTab('signup')">Sign Up</button>
+    </div>
+    <!-- Login -->
+    <div id="login-form">
+      <div class="field"><label class="lbl">Email</label><input type="email" id="login-email" placeholder="you@example.com" autocomplete="email"></div>
+      <div class="field"><label class="lbl">Password</label><input type="password" id="login-pw" placeholder="••••••••" autocomplete="current-password"></div>
+      <div id="login-err" class="err-msg" style="display:none"></div>
+      <button class="btn pri full" style="margin-top:8px" onclick="doLogin()">Sign In</button>
+    </div>
+    <!-- Signup -->
+    <div id="signup-form" style="display:none">
+      <div class="field"><label class="lbl">Your Name</label><input type="text" id="signup-name" placeholder="Jane Smith" autocomplete="name"></div>
+      <div class="field"><label class="lbl">Email</label><input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email"></div>
+      <div class="field"><label class="lbl">Password</label><input type="password" id="signup-pw" placeholder="At least 6 characters" autocomplete="new-password"></div>
+      <div id="signup-err" class="err-msg" style="display:none"></div>
+      <button class="btn pri full" style="margin-top:8px" onclick="doSignup()">Create Account</button>
+      <p style="font-size:11px;color:var(--gray-400);text-align:center;margin-top:10px">By signing up you agree to our Terms & Privacy Policy</p>
+    </div>
+    <div class="auth-forgot"><button onclick="showForgot()">Forgot password?</button></div>
+  </div>
+  <div class="auth-links">
+    <button onclick="navToPage('terms-page')">Terms</button>
+    <button onclick="navToPage('privacy-page')">Privacy</button>
+  </div>
+</div>
+
+<!-- ══ FORGOT PASSWORD SCREEN ═══════════════════════════ -->
+<div id="reset-screen">
+  <div class="auth-card" style="max-width:360px;width:100%">
+    <button class="back-btn" onclick="showAuth()" style="margin-bottom:16px">← Back to Sign In</button>
+    <h2 style="font-size:20px;font-weight:800;margin-bottom:6px">Reset Password</h2>
+    <p style="font-size:13px;color:var(--gray-500);margin-bottom:20px">Enter your email and we'll send a reset link.</p>
+    <div class="field"><label class="lbl">Email</label><input type="email" id="forgot-email" placeholder="you@example.com"></div>
+    <div id="forgot-msg" style="display:none;margin-bottom:8px"></div>
+    <button class="btn pri full" onclick="doForgot()">Send Reset Link</button>
+  </div>
+</div>
+
+<!-- ══ WIZARD SCREEN ════════════════════════════════════ -->
+<div id="wizard-screen">
+  <div class="wiz-progress-bar"><div class="wiz-progress-fill" id="wiz-bar"></div></div>
+  <div class="wiz-body">
+    <div class="wiz-step-lbl" id="wiz-step-lbl"></div>
+    <div class="wiz-content" id="wiz-content"></div>
+    <div class="wiz-nav" id="wiz-nav"></div>
+  </div>
+</div>
+
+<!-- ══ MAIN APP ══════════════════════════════════════════ -->
+<div id="app">
+  <div id="app-header">
+    <div class="hdr-top">
+      <div class="hdr-left">
+        <div class="hdr-icon">🏕️</div>
+        <div>
+          <div class="hdr-title">My RV Journal</div>
+          <div class="hdr-sub">Your travel archive</div>
+        </div>
+      </div>
+      <div class="sync-dot" id="sync-dot" title="Synced"></div>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab on" data-tab="home" onclick="switchTab('home')">🏠 Home</button>
+      <button class="nav-tab" data-tab="vehicles" onclick="switchTab('vehicles')">🚗 Vehicles</button>
+      <button class="nav-tab" data-tab="settings" onclick="switchTab('settings')">⚙️ Settings</button>
+    </div>
+  </div>
+
+  <!-- HOME TAB -->
+  <div class="page show" id="home-tab">
+    <div class="page-inner" id="home-content"></div>
+  </div>
+
+  <!-- VEHICLES TAB -->
+  <div class="page" id="vehicles-tab">
+    <div class="page-inner" id="vehicles-content"></div>
+  </div>
+
+  <!-- SETTINGS TAB -->
+  <div class="page" id="settings-tab">
+    <div class="page-inner" id="settings-content"></div>
+  </div>
+
+  <!-- DETAIL PAGES (shown over tabs) -->
+  <div class="page" id="trip-page"><div class="page-inner" id="trip-content"></div></div>
+  <div class="page" id="stop-page"><div class="page-inner" id="stop-content"></div></div>
+  <div class="page" id="camper-page"><div class="page-inner" id="camper-content"></div></div>
+  <div class="page" id="vehicle-page"><div class="page-inner" id="vehicle-content"></div></div>
+  <div class="page" id="feedback-page"><div class="page-inner" id="feedback-content"></div></div>
+  <div class="page" id="terms-page"><div class="page-inner" id="terms-content"></div></div>
+  <div class="page" id="privacy-page"><div class="page-inner" id="privacy-content"></div></div>
+
+  <button id="fab" onclick="onFab()">+</button>
+</div>
+
+<!-- ══ ADD/EDIT MODAL ═══════════════════════════════════ -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-title" id="modal-title"></div>
+    <div id="modal-body"></div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<!-- ══ CONFIRM DIALOG ═══════════════════════════════════ -->
+<div id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-title" id="confirm-title"></div>
+    <div class="confirm-sub" id="confirm-sub"></div>
+    <div class="confirm-btns">
+      <button class="btn gho" onclick="resolveConfirm(false)">Cancel</button>
+      <button class="btn dan" id="confirm-ok" onclick="resolveConfirm(true)">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST ═════════════════════════════════════════════ -->
+<div id="toast"></div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────
+const SUPA_URL = 'https://jnwcjswnbacqveeатbtw.supabase.co'
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impud2Nqc3duYmFjcXZlZWF0YnR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNTc5MjgsImV4cCI6MjA5NjYzMzkyOH0.i2gMWg03Nq1-gExrJz54rCJu2l_KNqYi1BwAbYsOPiY'
+
+// ── SUPABASE CLIENT ───────────────────────────────────────
+const { createClient } = supabase
+let sb
+function getSB() {
+  if (!sb) sb = createClient(SUPA_URL, SUPA_KEY)
+  return sb
+}
+
+// ── STATE ─────────────────────────────────────────────────
+let currentUser = null
+let currentTab = 'home'
+let currentPage = null  // null = showing tabs, else page id
+let fabCallback = null
+let pageStack = []  // for back navigation
+
+// ── HELPERS ───────────────────────────────────────────────
+function el(tag, attrs={}, ...children) {
+  const e = document.createElement(tag)
+  for (const [k,v] of Object.entries(attrs)) {
+    if (k === 'cls') e.className = v
+    else if (k === 'txt') e.textContent = v
+    else if (k === 'html') e.innerHTML = v
+    else if (k.startsWith('on')) e[k] = v
+    else e.setAttribute(k, v)
+  }
+  for (const c of children) {
+    if (c instanceof Node) e.appendChild(c)
+    else if (c != null) e.appendChild(document.createTextNode(String(c)))
+  }
+  return e
+}
+function div(cls, ...children) { return el('div', {cls}, ...children) }
+function span(cls, txt) { return el('span', {cls, txt}) }
+
+function toast(msg, dur=2500) {
+  const t = document.getElementById('toast')
+  t.textContent = msg
+  t.classList.add('show')
+  setTimeout(() => t.classList.remove('show'), dur)
+}
+
+function syncDot(state) {
+  const d = document.getElementById('sync-dot')
+  d.className = 'sync-dot' + (state === 'saving' ? ' saving' : state === 'err' ? ' err' : '')
+}
+
+function localToday() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+}
+
+function fmtDate(s) {
+  if (!s) return ''
+  const d = new Date(s + 'T12:00:00')
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})
+}
+
+function fmtDateRange(start, end) {
+  if (!start && !end) return null
+  if (start && end) return `${fmtDate(start)} – ${fmtDate(end)}`
+  if (start) return `From ${fmtDate(start)}`
+  return `Until ${fmtDate(end)}`
+}
+
+function statusBadge(status) {
+  const icons = {planned:'📋',active:'✈️',completed:'✓'}
+  const b = el('span', {cls:`badge ${status}`, txt:`${icons[status]||''} ${status}`})
+  return b
+}
+
+function starRating(val, onChange, size='', readonly=false) {
+  const wrap = div('stars')
+  for (let i=1;i<=5;i++) {
+    const s = el('span', {cls:`star${size?' '+size:''}${readonly?' readonly':''}`, txt: i <= (val||0) ? '★' : '☆'})
+    if (!readonly) s.onclick = () => { onChange(i); renderStars(wrap, i, onChange, size) }
+    wrap.appendChild(s)
+  }
+  return wrap
+}
+function renderStars(wrap, val, onChange, size) {
+  wrap.innerHTML = ''
+  for (let i=1;i<=5;i++) {
+    const s = el('span', {cls:`star${size?' '+size:''}`, txt: i <= val ? '★' : '☆'})
+    s.onclick = () => { onChange(i); renderStars(wrap, i, onChange, size) }
+    wrap.appendChild(s)
+  }
+}
+
+function field(lbl, inputEl) {
+  const wrap = div('field')
+  if (lbl) wrap.appendChild(el('label', {cls:'lbl', txt:lbl}))
+  wrap.appendChild(inputEl)
+  return wrap
+}
+
+function textInput(placeholder, val='', type='text') {
+  const i = el('input', {type, placeholder, value:val})
+  return i
+}
+function textareaInput(placeholder, val='', rows=3) {
+  const t = el('textarea', {placeholder, rows})
+  t.value = val
+  return t
+}
+function selectInput(options, val='', placeholder='Select...') {
+  const s = el('select')
+  s.appendChild(el('option', {value:'', txt:placeholder}))
+  for (const o of options) {
+    const opt = el('option', {value:o.value, txt:o.label})
+    if (o.value === val) opt.selected = true
+    s.appendChild(opt)
+  }
+  return s
+}
+
+function btn(label, cls, onClick) {
+  const b = el('button', {cls:`btn ${cls}`, txt:label, onclick:onClick})
+  return b
+}
+
+function readRow(label, value) {
+  if (!value && value !== 0) return null
+  const d = div('read-row')
+  d.appendChild(el('div', {cls:'read-lbl', txt:label}))
+  d.appendChild(el('div', {cls:'read-val', txt:String(value)}))
+  return d
+}
+
+function chip(label) { return el('span', {cls:'chip', txt:label}) }
+
+function toggleBtn(label, on, onClick) {
+  const b = el('button', {cls:`toggle-btn${on?' on':''}`, txt:label, onclick:()=>{ onClick(!on); }})
+  return b
+}
+
+// ── CONFIRM DIALOG ────────────────────────────────────────
+let _confirmResolve = null
+function confirm2(title, sub, okLabel='Delete') {
+  document.getElementById('confirm-title').textContent = title
+  document.getElementById('confirm-sub').textContent = sub
+  document.getElementById('confirm-ok').textContent = okLabel
+  document.getElementById('confirm-overlay').classList.add('show')
+  return new Promise(r => { _confirmResolve = r })
+}
+function resolveConfirm(val) {
+  document.getElementById('confirm-overlay').classList.remove('show')
+  if (_confirmResolve) { _confirmResolve(val); _confirmResolve = null }
+}
+
+// ── MODAL ─────────────────────────────────────────────────
+function openModal(title, bodyEl, actions=[]) {
+  document.getElementById('modal-title').textContent = title
+  const b = document.getElementById('modal-body')
+  b.innerHTML = ''
+  b.appendChild(bodyEl)
+  const a = document.getElementById('modal-actions')
+  a.innerHTML = ''
+  for (const action of actions) a.appendChild(action)
+  document.getElementById('modal-overlay').classList.add('show')
+}
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('show')
+  }
+}
+
+// ── COLLAPSIBLE SECTION ───────────────────────────────────
+function collapsible(icon, title, bodyEl, defaultOpen=false) {
+  const wrap = div('coll')
+  const hdr = el('button', {cls:'coll-hdr'})
+  const left = div('coll-hdr-left')
+  left.appendChild(el('span', {cls:'coll-icon', txt:icon}))
+  left.appendChild(el('span', {txt:title}))
+  const chev = el('span', {cls:`coll-chevron${defaultOpen?' open':''}`, txt:'›'})
+  hdr.appendChild(left)
+  hdr.appendChild(chev)
+  const body = div(`coll-body${defaultOpen?' open':''}`)
+  body.appendChild(bodyEl)
+  hdr.onclick = () => { body.classList.toggle('open'); chev.classList.toggle('open') }
+  wrap.appendChild(hdr)
+  wrap.appendChild(body)
+  return wrap
+}
+
+// ── NAVIGATION ────────────────────────────────────────────
+function showAuth() {
+  document.getElementById('auth-screen').classList.add('show')
+  document.getElementById('reset-screen').classList.remove('show')
+  document.getElementById('app').classList.remove('show')
+  document.getElementById('wizard-screen').classList.remove('show')
+}
+function showApp() {
+  document.getElementById('auth-screen').classList.remove('show')
+  document.getElementById('reset-screen').classList.remove('show')
+  document.getElementById('app').classList.add('show')
+  document.getElementById('wizard-screen').classList.remove('show')
+}
+function showForgot() {
+  document.getElementById('auth-screen').classList.remove('show')
+  document.getElementById('reset-screen').classList.add('show')
+}
+function showWizard(stopId) {
+  document.getElementById('wizard-screen').classList.add('show')
+  document.getElementById('app').classList.remove('show')
+  startWizard(stopId)
+}
+
+function switchTab(tab) {
+  currentTab = tab
+  currentPage = null
+  pageStack = []
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('on', t.dataset.tab === tab))
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('show'))
+  document.getElementById(tab+'-tab').classList.add('show')
+  document.getElementById('fab').classList.remove('show')
+  if (tab === 'home') { renderHome(); document.getElementById('fab').classList.add('show') }
+  else if (tab === 'vehicles') renderVehicles()
+  else if (tab === 'settings') renderSettings()
+  window.scrollTo(0,0)
+}
+
+function navToPage(pageId, pushBack=true) {
+  if (pushBack && currentPage) pageStack.push(currentPage)
+  else if (pushBack) pageStack.push('tab:'+currentTab)
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('show'))
+  document.getElementById(pageId).classList.add('show')
+  document.getElementById('fab').classList.remove('show')
+  currentPage = pageId
+  window.scrollTo(0,0)
+  if(pageId==='terms-page') renderTerms()
+  if(pageId==='privacy-page') renderPrivacy()
+}
+
+function goBack() {
+  const prev = pageStack.pop()
+  if (!prev) { switchTab(currentTab); return }
+  if (prev.startsWith('tab:')) { switchTab(prev.slice(4)); return }
+  // going back to a page — re-render it
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('show'))
+  document.getElementById(prev).classList.add('show')
+  currentPage = prev
+  window.scrollTo(0,0)
+}
+
+function backBtn(label, onClick) {
+  return el('button', {cls:'back-btn', onclick: onClick || goBack}, '← ', label)
+}
+
+function authTab(which) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('on', (i===0&&which==='login')||(i===1&&which==='signup')))
+  document.getElementById('login-form').style.display = which==='login'?'':'none'
+  document.getElementById('signup-form').style.display = which==='signup'?'':'none'
+}
+
+// ── AUTH ──────────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim()
+  const pw = document.getElementById('login-pw').value
+  const errEl = document.getElementById('login-err')
+  errEl.style.display = 'none'
+  if (!email || !pw) { errEl.textContent = 'Please enter email and password.'; errEl.style.display = ''; return }
+  const {error} = await getSB().auth.signInWithPassword({email, password:pw})
+  if (error) { errEl.textContent = 'Invalid email or password.'; errEl.style.display = '' }
+  else { const {data:{user}} = await getSB().auth.getUser(); currentUser=user; showApp(); switchTab('home') }
+}
+
+async function doSignup() {
+  const name = document.getElementById('signup-name').value.trim()
+  const email = document.getElementById('signup-email').value.trim()
+  const pw = document.getElementById('signup-pw').value
+  const errEl = document.getElementById('signup-err')
+  errEl.style.display = 'none'
+  if (!name || !email || !pw) { errEl.textContent = 'All fields required.'; errEl.style.display = ''; return }
+  if (pw.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; errEl.style.display = ''; return }
+  const {data, error} = await getSB().auth.signUp({email, password:pw, options:{data:{name}}})
+  if (error) { errEl.textContent = error.message; errEl.style.display = '' }
+  else if (!data?.user) { errEl.textContent = 'Something went wrong. Check email confirmation settings.'; errEl.style.display = '' }
+  else { currentUser = data.user; showApp(); switchTab('home') }
+}
+
+async function doForgot() {
+  const email = document.getElementById('forgot-email').value.trim()
+  const msgEl = document.getElementById('forgot-msg')
+  msgEl.style.display = 'none'
+  if (!email) { msgEl.className='err-msg'; msgEl.textContent='Enter your email.'; msgEl.style.display=''; return }
+  const {error} = await getSB().auth.resetPasswordForEmail(email)
+  if (error) { msgEl.className='err-msg'; msgEl.textContent=error.message; msgEl.style.display='' }
+  else { msgEl.className='ok-msg'; msgEl.textContent='Reset link sent! Check your email.'; msgEl.style.display='' }
+}
+
+// ── FAB ───────────────────────────────────────────────────
+function onFab() { if (fabCallback) fabCallback() }
+
+// ── HOME ──────────────────────────────────────────────────
+let allTrips = []
+let searchTimer = null
+
+async function renderHome() {
+  const c = document.getElementById('home-content')
+  c.innerHTML = ''
+  c.classList.add('fade-in')
+
+  // Search
+  const searchInput = el('input', {type:'text', placeholder:'Search trips and stops...'})
+  searchInput.style.paddingLeft = '36px'
+  const searchWrap = div('search-wrap')
+  searchWrap.appendChild(el('span', {cls:'search-icon', txt:'🔍'}))
+  searchWrap.appendChild(searchInput)
+  c.appendChild(searchWrap)
+
+  const sortRow = div('sort-row')
+  const sortLabel = el('span', {txt:'Sort: ', style:'font-size:13px;color:var(--gray-500)'})
+  const sortSel = selectInput([{value:'recent',label:'Most Recent'},{value:'oldest',label:'Oldest First'}],'recent','')
+  sortRow.appendChild(sortLabel)
+  sortRow.appendChild(sortSel)
+  c.appendChild(sortRow)
+
+  const resultsEl = div('')
+  c.appendChild(resultsEl)
+
+  fabCallback = () => showAddTripModal()
+  document.getElementById('fab').classList.add('show')
+
+  async function load(search='') {
+    resultsEl.innerHTML = ''
+    resultsEl.appendChild(div('skeleton', ...[]).cloneNode())
+    const sk = div('')
+    for(let i=0;i<3;i++){const s=div('skeleton');s.style.cssText='height:72px;margin-bottom:10px;border-radius:14px';sk.appendChild(s)}
+    resultsEl.innerHTML='';resultsEl.appendChild(sk)
+
+    if (search.trim()) {
+      const [tr, sr] = await Promise.all([
+        getSB().from('trips').select('*, stops(*)').ilike('name', `%${search}%`),
+        getSB().from('stops').select('*, trip:trips(id,name)').ilike('name', `%${search}%`)
+      ])
+      resultsEl.innerHTML = ''
+      if (!tr.data?.length && !sr.data?.length) {
+        resultsEl.appendChild(emptyState('🔍','No results',`Nothing matched "${search}"`))
+        return
+      }
+      if (tr.data?.length) {
+        resultsEl.appendChild(el('div', {cls:'sec-hdr', txt:`Trips (${tr.data.length})`}))
+        for (const t of tr.data) resultsEl.appendChild(tripCard(t))
+      }
+      if (sr.data?.length) {
+        resultsEl.appendChild(el('div', {cls:'sec-hdr', txt:`Stops (${sr.data.length})`}))
+        for (const s of sr.data) resultsEl.appendChild(stopSearchCard(s))
+      }
+    } else {
+      const {data} = await getSB().from('trips').select('*, stops(*)')
+      allTrips = data || []
+      sortAndRender(sortSel.value)
+    }
+  }
+
+  function sortAndRender(sort) {
+    resultsEl.innerHTML = ''
+    if (!allTrips.length) {
+      resultsEl.appendChild(emptyState('🗺️','No trips yet','Tap + to create your first trip'))
+      return
+    }
+    const sorted = [...allTrips].sort((a,b) => {
+      const da = latestStopDate(a), db = latestStopDate(b)
+      if (!da && !db) return 0; if (!da) return 1; if (!db) return -1
+      return sort==='recent' ? db-da : da-db
+    })
+    for (const t of sorted) resultsEl.appendChild(tripCard(t))
+  }
+
+  function latestStopDate(trip) {
+    const stops = trip.stops||[]
+    const dates = stops.filter(s=>s.arrival_date).map(s=>new Date(s.arrival_date+'T12:00:00').getTime())
+    return dates.length ? Math.max(...dates) : 0
+  }
+
+  sortSel.onchange = () => { if (!searchInput.value.trim()) sortAndRender(sortSel.value) }
+  searchInput.oninput = () => {
+    clearTimeout(searchTimer)
+    searchTimer = setTimeout(() => load(searchInput.value), 220)
+    sortRow.style.display = searchInput.value.trim() ? 'none' : ''
+  }
+
+  load()
+}
+
+function emptyState(emoji, title, sub, btnLabel, btnFn) {
+  const d = div('empty-state')
+  d.appendChild(el('div', {cls:'empty-emoji', txt:emoji}))
+  d.appendChild(el('div', {cls:'empty-title', txt:title}))
+  d.appendChild(el('div', {cls:'empty-sub', txt:sub}))
+  if (btnLabel) d.appendChild(btn(btnLabel,'pri',btnFn))
+  return d
+}
+
+function tripCard(trip) {
+  const c = div('trip-card')
+  const left = div('')
+  const topRow = div('')
+  topRow.appendChild(statusBadge(trip.status))
+  left.appendChild(topRow)
+  left.appendChild(el('div', {cls:'trip-name', txt:trip.name}))
+  const dr = fmtDateRange(trip.start_date, trip.end_date)
+  if (dr) left.appendChild(el('div', {cls:'trip-date', txt:dr}))
+  c.appendChild(left)
+  c.appendChild(el('span', {cls:'trip-chevron', txt:'›'}))
+  c.onclick = () => openTrip(trip.id)
+  return c
+}
+
+function stopSearchCard(stop) {
+  const c = div('trip-card')
+  const left = div('')
+  left.appendChild(statusBadge(stop.status||'planned'))
+  left.appendChild(el('div', {cls:'trip-name', txt:stop.name}))
+  if (stop.trip) left.appendChild(el('div', {cls:'trip-date', txt:'📍 '+stop.trip.name}))
+  c.appendChild(left)
+  c.appendChild(el('span', {cls:'trip-chevron', txt:'›'}))
+  c.onclick = () => openStop(stop.id)
+  return c
+}
+
+// ── ADD TRIP MODAL ────────────────────────────────────────
+function showAddTripModal(existing=null) {
+  const nameI = textInput('e.g. Southwest Adventure', existing?.name||'')
+  const startI = el('input', {type:'date', value:existing?.start_date||''})
+  const endI = el('input', {type:'date', value:existing?.end_date||''})
+  const notesI = textareaInput('Optional notes...', existing?.notes||'')
+  const errEl = div('err-msg'); errEl.style.display='none'
+
+  const body = div('')
+  body.appendChild(field('Trip Name', nameI))
+  body.appendChild(div('grid2', field('Start Date', startI), field('End Date', endI)))
+  body.appendChild(field('Notes (optional)', notesI))
+  body.appendChild(errEl)
+
+  const saveBtn2 = btn(existing?'Save Changes':'Create Trip','pri', async () => {
+    const name = nameI.value.trim()
+    if (!name) { errEl.textContent='Please enter a trip name.'; errEl.style.display=''; return }
+    syncDot('saving')
+    if (existing) {
+      await getSB().from('trips').update({name,start_date:startI.value||null,end_date:endI.value||null,notes:notesI.value||null,updated_at:new Date().toISOString()}).eq('id',existing.id)
+      closeModal()
+      toast('Trip updated!')
+      openTrip(existing.id)
+    } else {
+      const {data:user} = await getSB().auth.getUser()
+      const {data,error} = await getSB().from('trips').insert({name,start_date:startI.value||null,end_date:endI.value||null,notes:notesI.value||null,status:'planned',user_id:user.user.id}).select().single()
+      if (error) { errEl.textContent=error.message; errEl.style.display=''; syncDot(''); return }
+      closeModal(); syncDot(''); toast('Trip created!')
+      openTrip(data.id)
+    }
+  })
+  openModal(existing?'Edit Trip':'New Trip', body, [btn('Cancel','gho',closeModal), saveBtn2])
+}
+
+// ── TRIP DETAIL ───────────────────────────────────────────
+async function openTrip(tripId) {
+  navToPage('trip-page')
+  const c = document.getElementById('trip-content')
+  c.innerHTML = '<div class="skeleton" style="height:160px;border-radius:14px;margin-top:8px"></div>'
+
+  const {data:trip} = await getSB().from('trips').select('*, stops(*)').eq('id',tripId).single()
+  c.innerHTML = ''
+  c.classList.add('fade-in')
+
+  c.appendChild(backBtn('Home', () => { switchTab('home') }))
+
+  // Trip header card
+  const hdrCard = div('card'); const hdrBody = div('card-body')
+  const topRow = div('', statusBadge(trip.status))
+  const editBtn2 = el('button', {cls:'edit-btn', txt:'✏️ Edit', onclick:()=>showAddTripModal(trip)})
+  topRow.style.display='flex'; topRow.style.justifyContent='space-between'; topRow.style.alignItems='center'
+  topRow.appendChild(editBtn2)
+  hdrBody.appendChild(topRow)
+  hdrBody.appendChild(el('h1', {txt:trip.name, style:'font-size:22px;font-weight:800;margin:8px 0 4px'}))
+  const dr = fmtDateRange(trip.start_date,trip.end_date)
+  if (dr) hdrBody.appendChild(el('p',{txt:dr,style:'font-size:13px;color:var(--gray-500)'}))
+  if (trip.notes) hdrBody.appendChild(el('p',{txt:trip.notes,style:'font-size:13px;color:var(--gray-600);margin-top:8px'}))
+
+  // Mark complete / reopen
+  const stops = trip.stops||[]
+  const allDone = stops.length>0 && stops.every(s=>s.status==='completed')
+  if (trip.status !== 'completed' && allDone) {
+    const compBtn = btn('✓ Mark Trip Complete','suc full', async()=>{
+      await getSB().from('trips').update({status:'completed',end_date:trip.end_date||localToday(),updated_at:new Date().toISOString()}).eq('id',tripId)
+      toast('Trip completed!'); openTrip(tripId)
+    })
+    compBtn.style.marginTop='12px'
+    hdrBody.appendChild(compBtn)
+  }
+  if (trip.status==='completed') {
+    const reopenBtn = btn('↩ Reopen Trip','gho full sm', async()=>{
+      await getSB().from('trips').update({status:'active',updated_at:new Date().toISOString()}).eq('id',tripId)
+      toast('Trip reopened'); openTrip(tripId)
+    })
+    reopenBtn.style.marginTop='8px'
+    hdrBody.appendChild(reopenBtn)
+  }
+
+  hdrCard.appendChild(hdrBody); c.appendChild(hdrCard)
+
+  // Stops
+  c.appendChild(el('div', {cls:'sec-hdr', txt:`Stops (${stops.length})`}))
+  if (!stops.length) {
+    c.appendChild(el('p',{txt:'No stops yet. Tap + to add one.',style:'font-size:13px;color:var(--gray-400);font-style:italic;margin-bottom:12px'}))
+  } else {
+    const sorted = [...stops].sort((a,b)=>(a.arrival_date||'').localeCompare(b.arrival_date||''))
+    for (const s of sorted) {
+      const sc = div('stop-card')
+      const left = div('')
+      left.appendChild(statusBadge(s.status))
+      left.appendChild(el('div',{cls:'stop-name',txt:s.name}))
+      const dr2 = fmtDateRange(s.arrival_date,s.departure_date)
+      if (dr2) left.appendChild(el('div',{cls:'stop-dates',txt:dr2}))
+      if (s.rating) { const sr2=el('span',{txt:'★'.repeat(s.rating)+'☆'.repeat(5-s.rating),style:'font-size:12px;color:#f59e0b'}); left.appendChild(sr2) }
+      sc.appendChild(left)
+      sc.appendChild(el('span',{cls:'trip-chevron',txt:'›'}))
+      sc.onclick = ()=>openStop(s.id)
+      c.appendChild(sc)
+    }
+  }
+
+  // Add stop button
+  const addStopBtn = btn('+ Add Stop','pri full', ()=>showAddStopModal(tripId, trip.name, ()=>openTrip(tripId)))
+  c.appendChild(addStopBtn)
+
+  // Delete trip
+  c.appendChild(el('div',{style:'height:20px'}))
+  c.appendChild(btn('🗑 Delete Trip','dan full sm', async()=>{
+    if (!await confirm2('Delete trip?','All stops and data will be permanently deleted.')) return
+    await getSB().from('trips').delete().eq('id',tripId)
+    toast('Trip deleted'); switchTab('home')
+  }))
+}
+
+// ── ADD STOP MODAL ────────────────────────────────────────
+function showAddStopModal(tripId, tripName, onDone) {
+  const nameI = textInput('e.g. Lake Mead RV Village')
+  const arrI = el('input',{type:'date',value:localToday()})
+  const depI = el('input',{type:'date',value:''})
+  const errEl = div('err-msg'); errEl.style.display='none'
+
+  const body = div('')
+  body.appendChild(el('p',{txt:`Adding stop to: ${tripName}`,style:'font-size:13px;color:var(--gray-500);margin-bottom:14px'}))
+  body.appendChild(field('Stop Name', nameI))
+  body.appendChild(div('grid2', field('Arrival Date', arrI), field('Departure Date (optional)', depI)))
+  body.appendChild(errEl)
+
+  const saveBtn2 = btn('Create Stop','pri', async()=>{
+    const name = nameI.value.trim()
+    if (!name) { errEl.textContent='Please enter a name.'; errEl.style.display=''; return }
+    syncDot('saving')
+    const {data:ud} = await getSB().auth.getUser()
+    const {data,error} = await getSB().from('stops').insert({
+      trip_id:tripId, name, status:'planned',
+      arrival_date:arrI.value||null, departure_date:depI.value||null,
+      user_id:ud.user.id
+    }).select().single()
+    syncDot('')
+    if (error) { errEl.textContent=error.message; errEl.style.display=''; return }
+    closeModal(); toast('Stop added!')
+    showWizard(data.id)
+  })
+  openModal('New Stop', body, [btn('Cancel','gho',closeModal), saveBtn2])
+}
+
+// ── WIZARD ────────────────────────────────────────────────
+let wizStopId = null
+let wizStep = 1
+const WIZ_TOTAL = 6
+let wizData = {}
+
+function startWizard(stopId) {
+  wizStopId = stopId; wizStep = 1
+  wizData = { arrivalDate: localToday(), siteNumber:'', rating:null, note:'', photoFile:null, photoPreview:null }
+  renderWizStep()
+}
+
+function renderWizStep() {
+  document.getElementById('wiz-bar').style.width = (wizStep/WIZ_TOTAL*100)+'%'
+  document.getElementById('wiz-step-lbl').textContent = `Step ${wizStep} of ${WIZ_TOTAL}`
+  const content = document.getElementById('wiz-content')
+  const nav = document.getElementById('wiz-nav')
+  content.innerHTML = ''; nav.innerHTML = ''
+
+  const h = t => el('h2',{cls:'wiz-h',txt:t})
+  const sub = t => el('p',{cls:'wiz-sub',txt:t})
+
+  if (wizStep===1) {
+    content.appendChild(h('When did you arrive?'))
+    content.appendChild(sub('Defaults to today'))
+    const i = el('input',{type:'date',value:wizData.arrivalDate})
+    i.oninput = e => wizData.arrivalDate = e.target.value
+    content.appendChild(i)
+  }
+  if (wizStep===2) {
+    content.appendChild(h("What's your site number?"))
+    content.appendChild(sub('Optional — skip if not applicable'))
+    const i = textInput('e.g. 42', wizData.siteNumber)
+    i.oninput = e => wizData.siteNumber = e.target.value
+    content.appendChild(i)
+  }
+  if (wizStep===3) {
+    content.appendChild(h('First impressions?'))
+    content.appendChild(sub('Give this stop a quick rating'))
+    const stars = starRating(wizData.rating, v => wizData.rating=v)
+    stars.style.justifyContent='center'
+    const wrap = div('',stars); wrap.style.display='flex'; wrap.style.justifyContent='center'
+    content.appendChild(wrap)
+  }
+  if (wizStep===4) {
+    content.appendChild(h('Add a photo?'))
+    content.appendChild(sub('Optional — capture the moment'))
+    if (wizData.photoPreview) {
+      const prev = div('photo-preview')
+      prev.appendChild(el('img',{src:wizData.photoPreview,alt:'Preview'}))
+      const rmBtn = el('button',{cls:'photo-preview-rm',txt:'Remove',onclick:()=>{wizData.photoFile=null;wizData.photoPreview=null;renderWizStep()}})
+      prev.appendChild(rmBtn)
+      content.appendChild(prev)
+    } else {
+      const drop = div('photo-drop')
+      drop.innerHTML = '<div style="font-size:36px;margin-bottom:8px">📷</div><div style="font-size:14px;color:var(--gray-500)">Tap to choose a photo</div>'
+      const fileI = el('input',{type:'file',accept:'image/*',style:'display:none'})
+      fileI.onchange = e => {
+        const f=e.target.files[0]; if(!f) return
+        wizData.photoFile = f
+        const r = new FileReader(); r.onload=ev=>{wizData.photoPreview=ev.target.result;renderWizStep()}; r.readAsDataURL(f)
+      }
+      drop.onclick = ()=>fileI.click()
+      content.appendChild(drop)
+      content.appendChild(fileI)
+    }
+  }
+  if (wizStep===5) {
+    content.appendChild(h('Quick note?'))
+    content.appendChild(sub('Anything you want to remember from arrival'))
+    const ta = textareaInput('First thoughts, conditions, anything notable...', wizData.note, 4)
+    ta.oninput = e => wizData.note = e.target.value
+    content.appendChild(ta)
+  }
+  if (wizStep===6) {
+    const ic = div('',el('div',{style:'font-size:48px;margin-bottom:12px;text-align:center',txt:'✅'}))
+    content.appendChild(ic)
+    content.appendChild(h("All set!"))
+    content.appendChild(sub("You're checked in. You can add more details to this stop anytime."))
+  }
+
+  // Nav buttons
+  if (wizStep>1 && wizStep<6) nav.appendChild(btn('Back','gho', ()=>{wizStep--;renderWizStep()}))
+  if (wizStep<5) nav.appendChild(btn(wizStep===3&&!wizData.rating?'Skip':'Continue','pri', ()=>{wizStep++;renderWizStep()}))
+  if (wizStep===5) nav.appendChild(btn(wizData.note?'Continue':'Skip','pri', ()=>{wizStep++;renderWizStep()}))
+  if (wizStep===6) nav.appendChild(btn('Open My Stop','pri', async()=>{
+    syncDot('saving')
+    await getSB().from('stops').update({status:'active',arrival_date:wizData.arrivalDate,rating:wizData.rating,updated_at:new Date().toISOString()}).eq('id',wizStopId)
+    if (wizData.siteNumber.trim()) {
+      await getSB().from('stop_site').upsert({stop_id:wizStopId,site_number:wizData.siteNumber},{onConflict:'stop_id'})
+    }
+    if (wizData.note.trim()) {
+      await getSB().from('stop_journal').upsert({stop_id:wizStopId,general_notes:wizData.note},{onConflict:'stop_id'})
+    }
+    if (wizData.photoFile) {
+      const {data:ud} = await getSB().auth.getUser()
+      const ext=wizData.photoFile.name.split('.').pop()
+      const path=`${ud.user.id}/${wizStopId}/${Date.now()}.${ext}`
+      await getSB().storage.from('photos').upload(path,wizData.photoFile)
+      const {count} = await getSB().from('photos').select('*',{count:'exact',head:true}).eq('stop_id',wizStopId)
+      await getSB().from('photos').insert({stop_id:wizStopId,user_id:ud.user.id,storage_path:path,is_cover:!count||count===0})
+    }
+    syncDot('')
+    document.getElementById('wizard-screen').classList.remove('show')
+    showApp()
+    openStop(wizStopId)
+  }))
+}
+
+// ── STOP DETAIL ───────────────────────────────────────────
+async function openStop(stopId) {
+  navToPage('stop-page')
+  const c = document.getElementById('stop-content')
+  c.innerHTML = '<div class="skeleton" style="height:200px;border-radius:0;margin:-16px -16px 16px"></div>'
+
+  const {data:stop} = await getSB().from('stops').select(`
+    *, trip:trips(id,name), photos(*),
+    journal:stop_journal(*), site:stop_site(*),
+    utilities:stop_utilities(*), facilities:stop_facilities(*),
+    local:stop_local(*), travel:stop_travel(*)
+  `).eq('id',stopId).single()
+
+  // Fetch photo URLs in parallel
+  const photos = stop.photos||[]
+  const photoUrls = {}
+  if (photos.length) {
+    await Promise.all(photos.map(async p=>{
+      const {data} = getSB().storage.from('photos').getPublicUrl(p.storage_path)
+      photoUrls[p.id] = data.publicUrl
+    }))
+  }
+
+  c.innerHTML = ''
+  c.classList.add('fade-in')
+
+  const coverPhoto = photos.find(p=>p.is_cover)
+
+  if (coverPhoto && photoUrls[coverPhoto.id]) {
+    const hero = div('hero-wrap')
+    hero.appendChild(el('img',{src:photoUrls[coverPhoto.id],alt:'Cover'}))
+    hero.appendChild(div('hero-overlay'))
+    const heroBack = div('hero-back')
+    heroBack.appendChild(backBtn(stop.trip?.name||'Trip', ()=>{openTrip(stop.trip_id)}))
+    hero.appendChild(heroBack)
+    c.appendChild(hero)
+  } else {
+    c.appendChild(backBtn(stop.trip?.name||'Trip', ()=>{openTrip(stop.trip_id)}))
+  }
+
+  const wrap = div('', {style:'padding:0'})
+
+  // Summary card
+  const sumCard = div('card'); const sumBody = div('card-body')
+  const sumTop = div('',{style:'display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px'})
+  sumTop.appendChild(statusBadge(stop.status))
+  const editStopBtn = el('button',{cls:'edit-btn',txt:'✏️ Edit',onclick:()=>showEditStopModal(stop,()=>openStop(stopId))})
+  sumTop.appendChild(editStopBtn)
+  sumBody.appendChild(sumTop)
+  sumBody.appendChild(el('h1',{txt:stop.name,style:'font-size:22px;font-weight:800;margin-bottom:4px'}))
+  if (stop.trip) sumBody.appendChild(el('p',{txt:'📍 '+stop.trip.name,style:'font-size:13px;color:var(--blue);font-weight:600;margin-bottom:8px'}))
+
+  // Dates
+  const dr = fmtDateRange(stop.arrival_date,stop.departure_date)
+  if (dr) sumBody.appendChild(el('p',{txt:dr,style:'font-size:13px;color:var(--gray-500);margin-bottom:6px'}))
+
+  // Rating
+  let currentRating = stop.rating||0
+  const ratingWrap = div('',{style:'margin-bottom:8px'})
+  ratingWrap.appendChild(el('div',{cls:'read-lbl',txt:'Rating',style:'margin-bottom:4px'}))
+  ratingWrap.appendChild(starRating(currentRating, async v=>{
+    currentRating=v
+    await getSB().from('stops').update({rating:v,updated_at:new Date().toISOString()}).eq('id',stopId)
+    toast('Rating saved')
+  }))
+  sumBody.appendChild(ratingWrap)
+
+  // Mark complete
+  if (stop.status!=='completed') {
+    const compBtn = btn('✓ Check Out','suc full', async()=>{
+      await getSB().from('stops').update({status:'completed',departure_date:stop.departure_date||localToday(),updated_at:new Date().toISOString()}).eq('id',stopId)
+      // Auto-complete trip if all stops done
+      const {data:allStops}=await getSB().from('stops').select('status').eq('trip_id',stop.trip_id)
+      if (allStops?.every(s=>s.status==='completed')) {
+        await getSB().from('trips').update({status:'completed',updated_at:new Date().toISOString()}).eq('id',stop.trip_id)
+      }
+      toast('Stop completed!'); openStop(stopId)
+    })
+    compBtn.style.marginTop='10px'
+    sumBody.appendChild(compBtn)
+  }
+  if (stop.status==='completed') {
+    sumBody.appendChild(btn('↩ Reopen','gho full sm', async()=>{
+      await getSB().from('stops').update({status:'planned',updated_at:new Date().toISOString()}).eq('id',stopId)
+      const {data:trip}=await getSB().from('trips').select('status').eq('id',stop.trip_id).single()
+      if(trip?.status==='completed') await getSB().from('trips').update({status:'active',updated_at:new Date().toISOString()}).eq('id',stop.trip_id)
+      toast('Reopened'); openStop(stopId)
+    }))
+  }
+  sumCard.appendChild(sumBody); c.appendChild(sumCard)
+
+  // Photos section
+  const photoCard = div('card'); const photoBody = div('card-body')
+  photoBody.appendChild(el('div',{style:'display:flex;justify-content:space-between;align-items:center;margin-bottom:10px',html:'<span style="font-size:14px;font-weight:700;color:var(--gray-800)">📷 Photos</span>'}))
+  const photoTopRow = photoBody.querySelector('div')
+  if (photos.length<3) {
+    const uploadLabel = el('label',{cls:'btn sec sm',txt:'+ Add Photo'})
+    const fileInput = el('input',{type:'file',accept:'image/*',style:'display:none'})
+    fileInput.onchange = async e => {
+      const file = e.target.files[0]; if(!file) return
+      const {data:ud}=await getSB().auth.getUser()
+      const ext=file.name.split('.').pop()
+      const path=`${ud.user.id}/${stopId}/${Date.now()}.${ext}`
+      syncDot('saving')
+      await getSB().storage.from('photos').upload(path,file)
+      const isCover = photos.length===0
+      await getSB().from('photos').insert({stop_id:stopId,user_id:ud.user.id,storage_path:path,is_cover:isCover})
+      syncDot(''); toast('Photo added'); openStop(stopId)
+    }
+    uploadLabel.appendChild(fileInput)
+    photoTopRow.appendChild(uploadLabel)
+  }
+  const grid = div('photo-grid')
+  for (const p of photos) {
+    const thumb = div('photo-thumb')
+    thumb.appendChild(el('img',{src:photoUrls[p.id]||'',alt:'photo'}))
+    if (p.is_cover) thumb.appendChild(el('div',{cls:'photo-cover-badge',txt:'Cover'}))
+    const acts = div('photo-actions')
+    if (!p.is_cover) {
+      const setCoverBtn = el('button',{cls:'photo-action-btn',txt:'★',onclick:async()=>{
+        await getSB().from('photos').update({is_cover:false}).eq('stop_id',stopId)
+        await getSB().from('photos').update({is_cover:true}).eq('id',p.id)
+        toast('Cover set'); openStop(stopId)
+      }})
+      acts.appendChild(setCoverBtn)
+    }
+    const delBtn = el('button',{cls:'photo-action-btn',txt:'✕',onclick:async()=>{
+      if(!await confirm2('Delete photo?','This cannot be undone.')) return
+      await getSB().storage.from('photos').remove([p.storage_path])
+      await getSB().from('photos').delete().eq('id',p.id)
+      toast('Photo deleted'); openStop(stopId)
+    }})
+    acts.appendChild(delBtn)
+    thumb.appendChild(acts)
+    grid.appendChild(thumb)
+  }
+  if (photos.length) photoBody.appendChild(grid)
+  else photoBody.appendChild(el('p',{cls:'empty-msg',txt:'No photos yet.'}))
+  photoCard.appendChild(photoBody); c.appendChild(photoCard)
+
+  // Journal
+  c.appendChild(journalSection(stopId, stop.journal))
+  c.appendChild(siteSection(stopId, stop.site))
+  c.appendChild(utilitiesSection(stopId, stop.utilities))
+  c.appendChild(facilitiesSection(stopId, stop.facilities))
+  c.appendChild(localSection(stopId, stop.local))
+  c.appendChild(travelSection(stopId, stop.travel))
+
+  // Delete
+  c.appendChild(el('div',{style:'height:12px'}))
+  c.appendChild(btn('🗑 Delete Stop','dan full sm', async()=>{
+    if(!await confirm2('Delete stop?','All data for this stop will be permanently deleted.')) return
+    const tripId=stop.trip_id
+    await getSB().from('stops').delete().eq('id',stopId)
+    toast('Stop deleted'); openTrip(tripId)
+  }))
+  c.appendChild(el('div',{style:'height:20px'}))
+}
+
+function showEditStopModal(stop, onDone) {
+  const nameI = textInput('Stop name', stop.name)
+  const arrI = el('input',{type:'date',value:stop.arrival_date||''})
+  const depI = el('input',{type:'date',value:stop.departure_date||''})
+  const errEl = div('err-msg'); errEl.style.display='none'
+  const body = div('')
+  body.appendChild(field('Stop Name', nameI))
+  body.appendChild(div('grid2',field('Arrival',arrI),field('Departure',depI)))
+  body.appendChild(errEl)
+  const saveBtn2 = btn('Save','pri', async()=>{
+    if (!nameI.value.trim()) { errEl.textContent='Name required'; errEl.style.display=''; return }
+    syncDot('saving')
+    await getSB().from('stops').update({name:nameI.value.trim(),arrival_date:arrI.value||null,departure_date:depI.value||null,updated_at:new Date().toISOString()}).eq('id',stop.id)
+    syncDot(''); closeModal(); toast('Saved'); onDone()
+  })
+  openModal('Edit Stop', body, [btn('Cancel','gho',closeModal), saveBtn2])
+}
+
+// ── STOP SECTIONS ─────────────────────────────────────────
+function sectionWrap(icon, title, editFormFn, readViewFn, defaultOpen=false) {
+  const inner = div('')
+  let editing = false
+
+  function renderInner() {
+    inner.innerHTML = ''
+    if (editing) {
+      editFormFn(inner, ()=>{editing=false;renderInner()})
+    } else {
+      const editRow = div('',{style:'display:flex;justify-content:flex-end;margin-bottom:10px'})
+      editRow.appendChild(el('button',{cls:'edit-btn',txt:'✏️ Edit',onclick:()=>{editing=true;renderInner()}}))
+      inner.appendChild(editRow)
+      readViewFn(inner)
+    }
+  }
+  renderInner()
+  const body = div('')
+  body.style.padding='4px 0 0'
+  body.appendChild(inner)
+  return collapsible(icon, title, body, defaultOpen)
+}
+
+function journalSection(stopId, initial) {
+  let data = {
+    general_notes: initial?.general_notes||'',
+    favorite_memory: initial?.favorite_memory||'',
+    would_stay_again: initial?.would_stay_again||'',
+    visit_next_time: initial?.visit_next_time||''
+  }
+  return sectionWrap('📔','Personal Journal',
+    (container, done) => {
+      const gnI=textareaInput('How was the stay?',data.general_notes,3)
+      const fmI=textareaInput('What will you remember most?',data.favorite_memory,2)
+      const vnI=textareaInput('Things to do or see next visit...',data.visit_next_time,2)
+
+      // Stay again buttons
+      const stayWrap = div('')
+      stayWrap.appendChild(el('div',{cls:'lbl',txt:'Would Stay Again?',style:'margin-bottom:6px'}))
+      const btns2 = div('stay-btns')
+      for (const [val,lbl] of [['yes','✓ Yes'],['maybe','~ Maybe'],['no','✗ No']]) {
+        const b = el('button',{cls:`stay-btn ${val}${data.would_stay_again===val?' on':''}`,txt:lbl,onclick:()=>{
+          data.would_stay_again = data.would_stay_again===val?'':val
+          btns2.querySelectorAll('.stay-btn').forEach(btn=>btn.classList.remove('on'))
+          if(data.would_stay_again) b.classList.add('on')
+        }})
+        btns2.appendChild(b)
+      }
+      stayWrap.appendChild(btns2)
+
+      container.appendChild(field('General Notes',gnI))
+      container.appendChild(field('Favorite Memory',fmI))
+      container.appendChild(stayWrap)
+      container.appendChild(el('div',{style:'height:10px'}))
+      container.appendChild(field('Visit / Do Next Time',vnI))
+      container.appendChild(div('btn-row',{style:'margin-top:12px'},
+        btn('Cancel','gho',done),
+        btn('Save Journal','pri',async()=>{
+          data.general_notes=gnI.value; data.favorite_memory=fmI.value; data.visit_next_time=vnI.value
+          syncDot('saving')
+          await getSB().from('stop_journal').upsert({stop_id:stopId,...data},{onConflict:'stop_id'})
+          syncDot(''); toast('Journal saved'); done()
+        })
+      ))
+    },
+    container => {
+      const hasContent = data.general_notes||data.favorite_memory||data.would_stay_again||data.visit_next_time
+      if (!hasContent) { container.appendChild(el('p',{cls:'empty-msg',txt:'No journal entries yet. Tap Edit to add your notes.'})); return }
+      if (data.general_notes) { const r=readRow('Notes',data.general_notes); if(r) container.appendChild(r) }
+      if (data.favorite_memory) { const r=readRow('Favorite Memory',data.favorite_memory); if(r) container.appendChild(r) }
+      if (data.would_stay_again) {
+        const d2=div('read-row')
+        d2.appendChild(el('div',{cls:'read-lbl',txt:'Would Stay Again'}))
+        const labels={yes:'✓ Yes',maybe:'~ Maybe',no:'✗ No'}
+        d2.appendChild(el('span',{cls:`stay-badge ${data.would_stay_again}`,txt:labels[data.would_stay_again]}))
+        container.appendChild(d2)
+      }
+      if (data.visit_next_time) { const r=readRow('Visit / Do Next Time',data.visit_next_time); if(r) container.appendChild(r) }
+    }
+  )
+}
+
+function siteSection(stopId, initial) {
+  let data = {
+    site_number:initial?.site_number||'',back_in_pull_thru:initial?.back_in_pull_thru||'',
+    site_size:initial?.site_size||'',shade:initial?.shade||'',view:initial?.view||'',noise:initial?.noise||'',
+    has_fire_ring:initial?.has_fire_ring??false,has_picnic_table:initial?.has_picnic_table??false,has_grill:initial?.has_grill??false,
+    wildlife_notes:initial?.wildlife_notes||'',site_notes:initial?.site_notes||''
+  }
+  return sectionWrap('📍','Site Information',
+    (container, done) => {
+      const snI=textInput('42',data.site_number)
+      const tpI=selectInput([{value:'Back-In',label:'Back-In'},{value:'Pull-Thru',label:'Pull-Thru'}],data.back_in_pull_thru)
+      const szI=textInput('e.g. Large',data.site_size)
+      const shI=selectInput([{value:'Full Sun',label:'Full Sun'},{value:'Partial',label:'Partial'},{value:'Full Shade',label:'Full Shade'}],data.shade)
+      const vwI=textInput('Mountain, lake, forest...',data.view)
+      const noI=selectInput([{value:'Quiet',label:'Quiet'},{value:'Moderate',label:'Moderate'},{value:'Noisy',label:'Noisy'}],data.noise)
+      const wlI=textareaInput('Any wildlife sightings...',data.wildlife_notes,2)
+      const snI2=textareaInput('Other notes about the site...',data.site_notes,2)
+
+      container.appendChild(div('grid2',field('Site Number',snI),field('Type',tpI)))
+      container.appendChild(div('grid2',field('Site Size',szI),field('Shade',shI)))
+      container.appendChild(field('View',vwI))
+      container.appendChild(field('Noise Level',noI))
+
+      container.appendChild(el('div',{cls:'lbl',txt:'Amenities at Site',style:'margin-top:6px;margin-bottom:8px'}))
+      const amenWrap = div('toggles-wrap')
+      const toggles = {}
+      for (const [key,lbl] of [['has_fire_ring','Fire Ring'],['has_picnic_table','Picnic Table'],['has_grill','Grill']]) {
+        let on = !!data[key]
+        const b = el('button',{cls:`toggle-btn${on?' on':''}`,txt:lbl,onclick:()=>{on=!on;b.classList.toggle('on',on);toggles[key]=on}})
+        toggles[key]=on; amenWrap.appendChild(b)
+      }
+      container.appendChild(amenWrap)
+      container.appendChild(el('div',{style:'height:8px'}))
+      container.appendChild(field('Wildlife Notes',wlI))
+      container.appendChild(field('Site Notes',snI2))
+      container.appendChild(div('btn-row',{style:'margin-top:12px'},
+        btn('Cancel','gho',done),
+        btn('Save','pri',async()=>{
+          const saveData={...data,site_number:snI.value,back_in_pull_thru:tpI.value,site_size:szI.value,shade:shI.value,view:vwI.value,noise:noI.value,...toggles,wildlife_notes:wlI.value,site_notes:snI2.value}
+          Object.assign(data,saveData)
+          syncDot('saving')
+          await getSB().from('stop_site').upsert({stop_id:stopId,...saveData},{onConflict:'stop_id'})
+          syncDot(''); toast('Saved'); done()
+        })
+      ))
+    },
+    container => {
+      const hasContent = data.site_number||data.back_in_pull_thru||data.site_size||data.shade||data.view||data.noise||data.has_fire_ring||data.has_picnic_table||data.has_grill||data.wildlife_notes||data.site_notes
+      if (!hasContent) { container.appendChild(el('p',{cls:'empty-msg',txt:'No site info yet.'})); return }
+      const grid=div('read-grid')
+      const rr=readRow('Site Number',data.site_number); if(rr) grid.appendChild(rr)
+      const rr2=readRow('Type',data.back_in_pull_thru); if(rr2) grid.appendChild(rr2)
+      const rr3=readRow('Size',data.site_size); if(rr3) grid.appendChild(rr3)
+      const rr4=readRow('Shade',data.shade); if(rr4) grid.appendChild(rr4)
+      const rr5=readRow('Noise',data.noise); if(rr5) grid.appendChild(rr5)
+      if(Object.values(grid.children).length) container.appendChild(grid)
+      const rr6=readRow('View',data.view); if(rr6) container.appendChild(rr6)
+      const amenities=[data.has_fire_ring&&'Fire Ring',data.has_picnic_table&&'Picnic Table',data.has_grill&&'Grill'].filter(Boolean)
+      if (amenities.length) {
+        const d2=div('read-row'); d2.appendChild(el('div',{cls:'read-lbl',txt:'Amenities'}))
+        const tw=div('toggles-wrap'); for(const a of amenities) tw.appendChild(chip(a))
+        d2.appendChild(tw); container.appendChild(d2)
+      }
+      const rr7=readRow('Wildlife Notes',data.wildlife_notes); if(rr7) container.appendChild(rr7)
+      const rr8=readRow('Site Notes',data.site_notes); if(rr8) container.appendChild(rr8)
+    }
+  )
+}
+
+function utilitiesSection(stopId, initial) {
+  let data = {
+    full_hookup:initial?.full_hookup??false,has_water:initial?.has_water??false,has_electric:initial?.has_electric??false,
+    has_sewer:initial?.has_sewer??false,dry_camping:initial?.dry_camping??false,
+    amp_50:initial?.amp_50??false,amp_30:initial?.amp_30??false,amp_20:initial?.amp_20??false,
+    dump_station:initial?.dump_station||'',generator_rules:initial?.generator_rules||'',
+    wifi_available:initial?.wifi_available??false,wifi_rating:initial?.wifi_rating??null,
+    cell_verizon:initial?.cell_verizon||'',cell_att:initial?.cell_att||'',
+    cell_tmobile:initial?.cell_tmobile||'',cell_other:initial?.cell_other||'',
+    connectivity_notes:initial?.connectivity_notes||''
+  }
+  return sectionWrap('⚡','Utilities & Connectivity',
+    (container, done) => {
+      const toggleState = {...data}
+      const toggleBtns = {}
+      function mkToggle(key, label) {
+        const b = el('button',{cls:`toggle-btn${toggleState[key]?' on':''}`,txt:label,onclick:()=>{toggleState[key]=!toggleState[key];b.classList.toggle('on',toggleState[key])}})
+        toggleBtns[key]=b; return b
+      }
+      container.appendChild(el('div',{cls:'lbl',txt:'Hookups',style:'margin-bottom:8px'}))
+      const hw=div('toggles-wrap')
+      for(const [k,l] of [['full_hookup','Full Hookup'],['has_water','Water'],['has_electric','Electric'],['has_sewer','Sewer'],['dry_camping','Dry Camping']]) hw.appendChild(mkToggle(k,l))
+      container.appendChild(hw)
+      container.appendChild(el('div',{cls:'lbl',txt:'Electrical',style:'margin:12px 0 8px'}))
+      const ew=div('toggles-wrap')
+      for(const [k,l] of [['amp_50','50 Amp'],['amp_30','30 Amp'],['amp_20','20 Amp']]) ew.appendChild(mkToggle(k,l))
+      container.appendChild(ew)
+      const dumpI=textInput('On-site, nearby, none...',data.dump_station)
+      const genI=textInput('Hours allowed, restrictions...',data.generator_rules)
+      container.appendChild(el('div',{style:'height:10px'}))
+      container.appendChild(field('Dump Station',dumpI))
+      container.appendChild(field('Generator Rules',genI))
+      container.appendChild(el('div',{cls:'lbl',txt:'Wi-Fi',style:'margin:10px 0 8px'}))
+      const wifiWrap=div('toggles-wrap'); wifiWrap.appendChild(mkToggle('wifi_available','Wi-Fi Available'))
+      container.appendChild(wifiWrap)
+      let wifiRating=data.wifi_rating
+      const wifiRatingWrap=div('',{style:'margin-top:8px'})
+      wifiRatingWrap.appendChild(el('div',{cls:'lbl',txt:'Wi-Fi Rating',style:'margin-bottom:4px'}))
+      wifiRatingWrap.appendChild(starRating(wifiRating,v=>{wifiRating=v},'sm'))
+      container.appendChild(wifiRatingWrap)
+      container.appendChild(el('div',{cls:'lbl',txt:'Cell Signal',style:'margin:10px 0 8px'}))
+      const vzI=textInput('Strong/Weak/None',data.cell_verizon)
+      const atI=textInput('Strong/Weak/None',data.cell_att)
+      const tmI=textInput('Strong/Weak/None',data.cell_tmobile)
+      const otI=textInput('Provider & signal',data.cell_other)
+      container.appendChild(div('grid2',field('Verizon',vzI),field('AT&T',atI)))
+      container.appendChild(div('grid2',field('T-Mobile',tmI),field('Other',otI)))
+      const connI=textareaInput('',data.connectivity_notes,2)
+      container.appendChild(field('Connectivity Notes',connI))
+      container.appendChild(div('btn-row',{style:'margin-top:12px'},
+        btn('Cancel','gho',done),
+        btn('Save','pri',async()=>{
+          const saveData={...toggleState,dump_station:dumpI.value,generator_rules:genI.value,wifi_rating:wifiRating,cell_verizon:vzI.value,cell_att:atI.value,cell_tmobile:tmI.value,cell_other:otI.value,connectivity_notes:connI.value}
+          Object.assign(data,saveData)
+          syncDot('saving')
+          await getSB().from('stop_utilities').upsert({stop_id:stopId,...saveData},{onConflict:'stop_id'})
+          syncDot(''); toast('Saved'); done()
+        })
+      ))
+    },
+    container => {
+      const hookups=[data.full_hookup&&'Full Hookup',data.has_water&&'Water',data.has_electric&&'Electric',data.has_sewer&&'Sewer',data.dry_camping&&'Dry Camping'].filter(Boolean)
+      const amps=[data.amp_50&&'50 Amp',data.amp_30&&'30 Amp',data.amp_20&&'20 Amp'].filter(Boolean)
+      const hasContent=hookups.length||amps.length||data.dump_station||data.generator_rules||data.wifi_available||data.cell_verizon||data.cell_att||data.cell_tmobile||data.cell_other||data.connectivity_notes
+      if(!hasContent){container.appendChild(el('p',{cls:'empty-msg',txt:'No utilities info yet.'}));return}
+      if(hookups.length){const d2=div('read-row');d2.appendChild(el('div',{cls:'read-lbl',txt:'Hookups'}));const tw=div('toggles-wrap');for(const h of hookups)tw.appendChild(chip(h));d2.appendChild(tw);container.appendChild(d2)}
+      if(amps.length){const d2=div('read-row');d2.appendChild(el('div',{cls:'read-lbl',txt:'Electrical'}));const tw=div('toggles-wrap');for(const a of amps)tw.appendChild(chip(a));d2.appendChild(tw);container.appendChild(d2)}
+      const r1=readRow('Dump Station',data.dump_station);if(r1)container.appendChild(r1)
+      const r2=readRow('Generator Rules',data.generator_rules);if(r2)container.appendChild(r2)
+      if(data.wifi_available){const d2=div('read-row');d2.appendChild(el('div',{cls:'read-lbl',txt:'Wi-Fi'}));const tw=div('toggles-wrap');tw.appendChild(chip('Available'));if(data.wifi_rating)tw.appendChild(el('span',{txt:'★'.repeat(data.wifi_rating)+'☆'.repeat(5-data.wifi_rating),style:'font-size:14px;color:#f59e0b'}));d2.appendChild(tw);container.appendChild(d2)}
+      if(data.cell_verizon||data.cell_att||data.cell_tmobile||data.cell_other){
+        container.appendChild(el('div',{cls:'read-lbl',txt:'Cell Signal',style:'margin-bottom:6px'}))
+        const g=div('read-grid')
+        const rc=readRow('Verizon',data.cell_verizon);if(rc)g.appendChild(rc)
+        const rc2=readRow('AT&T',data.cell_att);if(rc2)g.appendChild(rc2)
+        const rc3=readRow('T-Mobile',data.cell_tmobile);if(rc3)g.appendChild(rc3)
+        const rc4=readRow('Other',data.cell_other);if(rc4)g.appendChild(rc4)
+        container.appendChild(g)
+      }
+      const r3=readRow('Connectivity Notes',data.connectivity_notes);if(r3)container.appendChild(r3)
+    }
+  )
+}
+
+function facilitiesSection(stopId, initial) {
+  const AMENITIES=[['has_pool','🏊 Pool'],['has_hot_tub','♨️ Hot Tub'],['has_lodge','🏠 Lodge'],['has_adult_center','🎯 Adult Center'],['has_laundry','🧺 Laundry'],['has_propane','⛽ Propane'],['has_firewood','🪵 Firewood'],['has_restaurant','🍽️ Restaurant'],['has_dog_park','🐕 Dog Park'],['has_fitness','💪 Fitness'],['has_hiking','🥾 Hiking'],['has_kayaking','🛶 Kayaking'],['has_fishing','🎣 Fishing'],['has_mini_golf','⛳ Mini Golf'],['has_shuffleboard','🏒 Shuffleboard'],['has_pickleball','🏓 Pickleball']]
+  let data={flush_toilets:initial?.flush_toilets??false,vault_toilets:initial?.vault_toilets??false,showers_free:initial?.showers_free??false,showers_paid:initial?.showers_paid??false,bathhouse_cleanliness:initial?.bathhouse_cleanliness??null,bathhouse_notes:initial?.bathhouse_notes||'',amenity_notes:initial?.amenity_notes||''}
+  for(const[k]of AMENITIES)data[k]=initial?.[k]??false
+  return sectionWrap('🏛️','Facilities & Amenities',
+    (container,done)=>{
+      const ts={...data}; const tBtns={}
+      function mkT(k,l){const b=el('button',{cls:`toggle-btn${ts[k]?' on':''}`,txt:l,onclick:()=>{ts[k]=!ts[k];b.classList.toggle('on',ts[k])}});tBtns[k]=b;return b}
+      container.appendChild(el('div',{cls:'lbl',txt:'Bathhouse',style:'margin-bottom:8px'}))
+      const bw=div('toggles-wrap')
+      for(const[k,l]of[['flush_toilets','Flush Toilets'],['vault_toilets','Vault Toilets'],['showers_free','Free Showers'],['showers_paid','Paid Showers']])bw.appendChild(mkT(k,l))
+      container.appendChild(bw)
+      let cleanRating=data.bathhouse_cleanliness
+      const cleanWrap=div('',{style:'margin:10px 0 6px'})
+      cleanWrap.appendChild(el('div',{cls:'lbl',txt:'Cleanliness Rating',style:'margin-bottom:4px'}))
+      cleanWrap.appendChild(starRating(cleanRating,v=>{cleanRating=v},'sm'))
+      container.appendChild(cleanWrap)
+      const bnI=textareaInput('Notes about the bathhouse...',data.bathhouse_notes,2)
+      container.appendChild(field('Bathhouse Notes',bnI))
+      container.appendChild(el('div',{cls:'lbl',txt:'Amenities',style:'margin:10px 0 8px'}))
+      const aw=div('toggles-wrap')
+      for(const[k,l]of AMENITIES)aw.appendChild(mkT(k,l))
+      container.appendChild(aw)
+      const anI=textareaInput('',data.amenity_notes,2)
+      container.appendChild(el('div',{style:'height:8px'}))
+      container.appendChild(field('Amenity Notes',anI))
+      container.appendChild(div('btn-row',{style:'margin-top:12px'},
+        btn('Cancel','gho',done),
+        btn('Save','pri',async()=>{
+          const saveData={...ts,bathhouse_cleanliness:cleanRating,bathhouse_notes:bnI.value,amenity_notes:anI.value}
+          Object.assign(data,saveData); syncDot('saving')
+          await getSB().from('stop_facilities').upsert({stop_id:stopId,...saveData},{onConflict:'stop_id'})
+          syncDot(''); toast('Saved'); done()
+        })
+      ))
+    },
+    container=>{
+      const bathroom=[data.flush_toilets&&'Flush Toilets',data.vault_toilets&&'Vault Toilets',data.showers_free&&'Free Showers',data.showers_paid&&'Paid Showers'].filter(Boolean)
+      const active=AMENITIES.filter(([k])=>data[k]).map(([,l])=>l)
+      if(!bathroom.length&&!active.length&&!data.bathhouse_notes&&!data.amenity_notes){container.appendChild(el('p',{cls:'empty-msg',txt:'No facilities info yet.'}));return}
+      if(bathroom.length){const d2=div('read-row');d2.appendChild(el('div',{cls:'read-lbl',txt:'Bathhouse'}));const tw=div('toggles-wrap');for(const b of bathroom)tw.appendChild(chip(b));d2.appendChild(tw);if(data.bathhouse_cleanliness)tw.appendChild(el('span',{txt:'★'.repeat(data.bathhouse_cleanliness)+'☆'.repeat(5-data.bathhouse_cleanliness),style:'font-size:14px;color:#f59e0b'}));container.appendChild(d2)}
+      const bn=readRow('Bathhouse Notes',data.bathhouse_notes);if(bn)container.appendChild(bn)
+      if(active.length){const d2=div('read-row');d2.appendChild(el('div',{cls:'read-lbl',txt:'Amenities'}));const tw=div('toggles-wrap');for(const a of active)tw.appendChild(chip(a));d2.appendChild(tw);container.appendChild(d2)}
+      const an=readRow('Amenity Notes',data.amenity_notes);if(an)container.appendChild(an)
+    }
+  )
+}
+
+function localSection(stopId, initial) {
+  let data={weather:initial?.weather||'',nearby_sightseeing:initial?.nearby_sightseeing||'',nearby_restaurants:initial?.nearby_restaurants||'',grocery_distance:initial?.grocery_distance||'',places_visited:initial?.places_visited||'',visit_next_time:initial?.visit_next_time||'',local_notes:initial?.local_notes||''}
+  return sectionWrap('🌲','Local Area',
+    (container,done)=>{
+      const wI=textInput('Sunny, 75°F, slight breeze...',data.weather)
+      const nsI=textareaInput('Parks, attractions, landmarks...',data.nearby_sightseeing,2)
+      const nrI=textareaInput('Restaurants you enjoyed...',data.nearby_restaurants,2)
+      const gdI=textInput('Walmart, 5 miles east...',data.grocery_distance)
+      const pvI=textareaInput('Places you actually went this trip...',data.places_visited,2)
+      const vnI=textareaInput('Things to do on a future visit...',data.visit_next_time,2)
+      const lnI=textareaInput('Any other local area notes...',data.local_notes,2)
+      container.appendChild(field('Weather During Stay',wI))
+      container.appendChild(field('Nearby Sightseeing',nsI))
+      container.appendChild(field('Nearby Restaurants',nrI))
+      container.appendChild(field('Nearest Grocery Store',gdI))
+      container.appendChild(field('Places Visited',pvI))
+      container.appendChild(field('Visit / Do Next Time',vnI))
+      container.appendChild(field('Local Notes',lnI))
+      container.appendChild(div('btn-row',{style:'margin-top:12px'},
+        btn('Cancel','gho',done),
+        btn('Save','pri',async()=>{
+          const saveData={weather:wI.value,nearby_sightseeing:nsI.value,nearby_restaurants:nrI.value,grocery_distance:gdI.value,places_visited:pvI.value,visit_next_time:vnI.value,local_notes:lnI.value}
+          Object.assign(data,saveData); syncDot('saving')
+          await getSB().from('stop_local').upsert({stop_id:stopId,...saveData},{onConflict:'stop_id'})
+          syncDot(''); toast('Saved'); done()
+        })
+      ))
+    },
+    container=>{
+      if(!Object.values(data).some(v=>v)){container.appendChild(el('p',{cls:'empty-msg',txt:'No local area info yet.'}));return}
+      for(const[k,l]of[['weather','Weather'],['nearby_sightseeing','Nearby Sightseeing'],['nearby_restaurants','Nearby Restaurants'],['grocery_distance','Nearest Grocery'],['places_visited','Places Visited'],['visit_next_time','Visit / Do Next Time'],['local_notes','Local Notes']]){
+        const r=readRow(l,data[k]);if(r)container.appendChild(r)
+      }
+    }
+  )
+}
+
+function travelSection(stopId, initial) {
+  let data={cost:initial?.cost||'',miles_traveled:initial?.miles_traveled||'',travel_time:initial?.travel_time||'',travel_notes:initial?.travel_notes||'',how_found:initial?.how_found||'',management_notes:initial?.management_notes||'',scenery_notes:initial?.scenery_notes||'',parking_notes:initial?.parking_notes||'',road_notes:initial?.road_notes||''}
+  return sectionWrap('🧭','Travel Information',
+    (container,done)=>{
+      const cI=textInput('$45/night',data.cost)
+      const mI=textInput('247',data.miles_traveled)
+      const ttI=textInput('4h 30m',data.travel_time)
+      const tnI=textareaInput('How was the drive?',data.travel_notes,2)
+      const hfI=textInput('Passport America, Google...',data.how_found)
+      const mnI=textareaInput('',data.management_notes,2)
+      const snI=textareaInput('',data.scenery_notes,2)
+      const pnI=textareaInput('',data.parking_notes,2)
+      const rnI=textareaInput('',data.road_notes,2)
+      container.appendChild(div('grid3',field('Cost',cI),field('Miles',mI),field('Travel Time',ttI)))
+      container.appendChild(field('Travel Notes',tnI))
+      container.appendChild(field('How Did You Find This Spot?',hfI))
+      container.appendChild(field('Management Notes',mnI))
+      container.appendChild(field('Scenery Notes',snI))
+      container.appendChild(field('Parking Notes',pnI))
+      container.appendChild(field('Road Notes',rnI))
+      container.appendChild(div('btn-row',{style:'margin-top:12px'},
+        btn('Cancel','gho',done),
+        btn('Save','pri',async()=>{
+          const saveData={cost:cI.value,miles_traveled:mI.value,travel_time:ttI.value,travel_notes:tnI.value,how_found:hfI.value,management_notes:mnI.value,scenery_notes:snI.value,parking_notes:pnI.value,road_notes:rnI.value}
+          Object.assign(data,saveData); syncDot('saving')
+          await getSB().from('stop_travel').upsert({stop_id:stopId,...saveData},{onConflict:'stop_id'})
+          syncDot(''); toast('Saved'); done()
+        })
+      ))
+    },
+    container=>{
+      if(!Object.values(data).some(v=>v)){container.appendChild(el('p',{cls:'empty-msg',txt:'No travel info yet.'}));return}
+      if(data.cost||data.miles_traveled||data.travel_time){const g=div('read-grid3');[['Cost',data.cost],['Miles',data.miles_traveled],['Travel Time',data.travel_time]].forEach(([l,v])=>{const r=readRow(l,v);if(r)g.appendChild(r)});container.appendChild(g)}
+      for(const[k,l]of[['travel_notes','Travel Notes'],['how_found','How Found'],['management_notes','Management Notes'],['scenery_notes','Scenery Notes'],['parking_notes','Parking Notes'],['road_notes','Road Notes']]){const r=readRow(l,data[k]);if(r)container.appendChild(r)}
+    }
+  )
+}
+
+// ── VEHICLES ──────────────────────────────────────────────
+function renderVehicles() {
+  const c = document.getElementById('vehicles-content')
+  c.innerHTML = ''
+  c.classList.add('fade-in')
+  c.appendChild(el('h1',{txt:'Vehicles',style:'font-size:22px;font-weight:800;margin-bottom:16px;padding-top:4px'}))
+
+  const cards = [
+    {icon:'🚌', title:'My Camper / RV', sub:'Specs, registration, leveling & more', page:'camper-page', fn:openCamper},
+    {icon:'🛻', title:'Tow Vehicle', sub:'Truck, SUV or car details', page:'vehicle-page', fn:openVehicle},
+  ]
+  for(const card of cards) {
+    const c2 = div('card card-tap')
+    const body = div('card-body', {style:'display:flex;align-items:center;gap:14px'})
+    body.appendChild(el('div',{txt:card.icon,style:'font-size:32px;flex-shrink:0'}))
+    const info = div('')
+    info.appendChild(el('div',{txt:card.title,style:'font-size:15px;font-weight:700;color:var(--gray-900)'}))
+    info.appendChild(el('div',{txt:card.sub,style:'font-size:12px;color:var(--gray-500);margin-top:2px'}))
+    body.appendChild(info)
+    body.appendChild(el('span',{txt:'›',style:'color:var(--gray-400);font-size:22px;margin-left:auto'}))
+    c2.appendChild(body)
+    c2.onclick = card.fn
+    c.appendChild(c2)
+  }
+}
+
+async function openCamper() { await openVehiclePage('camper','camper-page','camper-content','🚌 My Camper / RV') }
+async function openVehicle() { await openVehiclePage('vehicle','vehicle-page','vehicle-content','🛻 Tow Vehicle') }
+
+const MAINTENANCE_TYPES=[{value:'oil_change',label:'🔧 Oil Change'},{value:'tire_rotation',label:'🔄 Tire Rotation'},{value:'inspection',label:'🔍 Inspection'},{value:'repair',label:'🛠️ Repair'},{value:'other',label:'📝 Other'}]
+const CAMPER_TYPES=[{value:'Class A',label:'Class A'},{value:'Class B',label:'Class B'},{value:'Class C',label:'Class C'},{value:'Fifth Wheel',label:'Fifth Wheel'},{value:'Travel Trailer',label:'Travel Trailer'},{value:'Pop-Up',label:'Pop-Up'},{value:'Toy Hauler',label:'Toy Hauler'},{value:'Other',label:'Other'}]
+const HITCH_TYPES=[{value:'5th Wheel',label:'5th Wheel'},{value:'Gooseneck',label:'Gooseneck'},{value:'Conventional Ball',label:'Conventional Ball'},{value:'None',label:'None'}]
+const HITCH_SIZES=[{value:'1¼"',label:'1¼"'},{value:'2"',label:'2"'},{value:'2½"',label:'2½"'}]
+
+async function openVehiclePage(type, pageId, contentId, title) {
+  navToPage(pageId)
+  const c = document.getElementById(contentId)
+  c.innerHTML='<div class="skeleton" style="height:140px;border-radius:14px;margin-top:8px"></div>'
+
+  const [{data:vehicle},{data:logData}] = await Promise.all([
+    getSB().from('vehicles').select('*').eq('vehicle_type',type).maybeSingle(),
+    (async()=>{
+      const {data:v}=await getSB().from('vehicles').select('id').eq('vehicle_type',type).maybeSingle()
+      if(!v) return {data:[]}
+      return getSB().from('maintenance_logs').select('*').eq('vehicle_id',v.id).order('date',{ascending:false})
+    })()
+  ])
+
+  let photoUrl = null
+  if (vehicle?.photo_path) {
+    const {data} = getSB().storage.from('photos').getPublicUrl(vehicle.photo_path)
+    photoUrl = data.publicUrl
+  }
+  const logs = logData||[]
+  let form = vehicle ? {...vehicle} : {vehicle_type:type}
+
+  c.innerHTML=''
+  c.classList.add('fade-in')
+
+  // Photo header
+  if (photoUrl) {
+    const hero = div('hero-wrap')
+    hero.appendChild(el('img',{src:photoUrl,alt:'Vehicle'}))
+    hero.appendChild(div('hero-overlay'))
+    const hb = div('hero-back')
+    hb.appendChild(backBtn('Vehicles',()=>switchTab('vehicles')))
+    hero.appendChild(hb)
+    const changeLabel = el('label',{style:'position:absolute;bottom:14px;right:14px;background:rgba(255,255,255,.9);border-radius:10px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer'})
+    changeLabel.textContent='📷 Change Photo'
+    const fileI=el('input',{type:'file',accept:'image/*',style:'display:none'})
+    fileI.onchange=e=>handleVehiclePhoto(e,type,vehicle?.id,pageId,contentId,title)
+    changeLabel.appendChild(fileI)
+    hero.appendChild(changeLabel)
+    c.appendChild(hero)
+  } else {
+    const topBar = div('',{style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:8px'})
+    topBar.appendChild(backBtn('Vehicles',()=>switchTab('vehicles')))
+    const addPhotoLabel = el('label',{cls:'btn sec sm'})
+    addPhotoLabel.textContent='📷 Add Photo'
+    const fileI=el('input',{type:'file',accept:'image/*',style:'display:none'})
+    fileI.onchange=e=>handleVehiclePhoto(e,type,vehicle?.id,pageId,contentId,title)
+    addPhotoLabel.appendChild(fileI); topBar.appendChild(addPhotoLabel)
+    c.appendChild(topBar)
+  }
+
+  c.appendChild(el('h1',{txt:vehicle?.name||title,style:'font-size:22px;font-weight:800;margin-bottom:4px;padding-top:8px'}))
+  if(vehicle?.make_model)c.appendChild(el('p',{txt:vehicle.make_model,style:'font-size:13px;color:var(--gray-500);margin-bottom:12px'}))
+
+  // Determine which fields to show based on type
+  const isCamper = type==='camper'
+
+  // General Info
+  c.appendChild(collapsible('ℹ️','General Info', vehicleEditSection(
+    isCamper
+      ? [['Name','name','text'],['Manufacturer','manufacturer','text'],['Make / Model','make_model','text'],null,['VIN','vin','text'],['License Plate','license_plate','text'],['Color','color','text'],['Purchased Date','purchased_date','date']]
+      : [['Name','name','text'],['Make / Model','make_model','text'],['Color','color','text'],['VIN','vin','text'],['License Plate','license_plate','text'],['Purchased Date','purchased_date','date']],
+    form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')},
+    isCamper?[['Type','type','select',CAMPER_TYPES]]:[]
+  ), true))
+
+  // Registration
+  c.appendChild(collapsible('📋','Registration & Inspection', vehicleEditSection(
+    [['Registration Number','registration_number','text'],['Registration Expires','registration_expires','date'],['Inspection Expires','inspection_expires','date']],
+    form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')}
+  )))
+
+  if (isCamper) {
+    // Specifications
+    c.appendChild(collapsible('📐','Specifications', vehicleEditSection(
+      [['Weight','weight','text'],['Length','length','text'],['Folded Length','folded_length','text'],['Max Height','max_height','text'],['Folded Height','folded_height','text'],['# of Tires','num_tires','number'],['Front Tire PSI','front_tire_pressure','text'],['Rear Tire PSI','rear_tire_pressure','text'],['Tag Axle PSI','tag_axle_tire_pressure','text'],['Slide-Out Count','slide_out_count','number'],['Propane Tank','propane_tank','text'],['Fresh Water','fresh_water_capacity','text'],['Grey Water','grey_water_capacity','text'],['Black Water','black_water_capacity','text']],
+      form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')},
+      [['Hitch Type','hitch_type','select',HITCH_TYPES]]
+    )))
+    c.appendChild(collapsible('⚖️','Leveling', vehicleEditSection(
+      [['Side-to-Side','side_to_side_leveling','text'],['Front-to-Back','front_to_back_leveling','text']],
+      form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')}
+    )))
+    c.appendChild(collapsible('⚙️','Engine & Generator', vehicleEditSection(
+      [['Engine Serial Number','engine_serial','text'],['Generator Make / Model','generator_make_model','text'],['Generator Serial Number','generator_serial','text']],
+      form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')}
+    )))
+  } else {
+    // Vehicle-specific fields
+    c.appendChild(collapsible('📐','Specifications', vehicleEditSection(
+      [['Towing Capacity','towing_capacity','text'],['GCWR','gcwr','text'],['Front Tire PSI','front_tire_pressure','text'],['Rear Tire PSI','rear_tire_pressure','text'],['# of Tires','num_tires','number']],
+      form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')},
+      [['Hitch Receiver Size','hitch_receiver_size','select',HITCH_SIZES]]
+    )))
+  }
+
+  c.appendChild(collapsible('📞','Contact Info', vehicleEditSection(
+    [['Dealer Contact','dealer_contact','textarea'],['Service Contact','service_contact','textarea'],['Manufacturer Contact','manufacturer_contact','textarea'],['Roadside Assistance','roadside_assistance','textarea']],
+    form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')}
+  )))
+  c.appendChild(collapsible('🚨','Emergency Info', vehicleEditSection(
+    [['Insurance Policy Info','insurance_policy','textarea'],['Tire Replacement Type','tire_replacement','text'],['Tag Axle Tire Type','tag_axle_tire_replacement','text']],
+    form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')}
+  )))
+  c.appendChild(collapsible('📝','Notes', vehicleEditSection(
+    [['Notes','notes','textarea']],
+    form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')}
+  )))
+
+  // Maintenance Log
+  c.appendChild(collapsible('🔧','Maintenance Log', maintenanceSection(vehicle?.id, type, logs, async()=>{
+    const {data:v}=await getSB().from('vehicles').select('id').eq('vehicle_type',type).maybeSingle()
+    if(!v) return []
+    const {data}=await getSB().from('maintenance_logs').select('*').eq('vehicle_id',v.id).order('date',{ascending:false})
+    return data||[]
+  })))
+}
+
+function vehicleEditSection(fields, form, onSave, selects=[]) {
+  const inner = div('')
+  let editing = false
+
+  function render() {
+    inner.innerHTML = ''
+    if (editing) {
+      const inputs = {}
+      const allFields = [...fields,...selects]
+      // Build a 2-col grid for text fields
+      const textFields = allFields.filter(f=>f&&f[2]!=='textarea')
+      const textareaFields = allFields.filter(f=>f&&f[2]==='textarea')
+      if (textFields.length) {
+        const g = div('grid2')
+        for (const f of textFields) {
+          if (!f) continue
+          let inp
+          if (f[2]==='select') inp = selectInput(f[3]||[], form[f[1]]||'', 'Select...')
+          else inp = el('input',{type:f[2]||'text',value:form[f[1]]||'',placeholder:''})
+          inputs[f[1]] = inp
+          g.appendChild(field(f[0],inp))
+        }
+        inner.appendChild(g)
+      }
+      for (const f of textareaFields) {
+        const ta = textareaInput('',form[f[1]]||'',2); inputs[f[1]]=ta; inner.appendChild(field(f[0],ta))
+      }
+      inner.appendChild(div('btn-row',{style:'margin-top:12px'},
+        btn('Cancel','gho',()=>{editing=false;render()}),
+        btn('Save','pri',async()=>{
+          const updates={}; for(const[,key] of Object.entries(inputs)) { /* handled below */ }
+          for(const [k,v] of Object.entries(inputs)) updates[k]=v.value||null
+          await onSave(updates); editing=false; render()
+        })
+      ))
+    } else {
+      const editRow=div('',{style:'display:flex;justify-content:flex-end;margin-bottom:10px'})
+      editRow.appendChild(el('button',{cls:'edit-btn',txt:'✏️ Edit',onclick:()=>{editing=true;render()}}))
+      inner.appendChild(editRow)
+      const allFields=[...fields,...selects].filter(Boolean)
+      const hasAny=allFields.some(f=>form[f[1]])
+      if(!hasAny){inner.appendChild(el('p',{cls:'empty-msg',txt:'No info yet. Tap Edit to add details.'}));return}
+      const g=div('read-grid')
+      let hasGrid=false
+      for(const f of allFields){
+        if(!f) continue
+        const r=readRow(f[0],form[f[1]])
+        if(r){if(f[2]==='textarea'){if(hasGrid){inner.appendChild(g);hasGrid=false};inner.appendChild(r)}else{g.appendChild(r);hasGrid=true}}
+      }
+      if(hasGrid)inner.appendChild(g)
+    }
+  }
+  render()
+  const body=div('',{style:'padding:4px 0 0'}); body.appendChild(inner)
+  return body
+}
+
+function maintenanceSection(vehicleId, vehicleType, initialLogs, reloadFn) {
+  let logs = [...initialLogs]
+  const wrap = div('',{style:'padding:4px 0 0'})
+  let showForm = false
+  let logForm = {date:localToday(),type:'',description:'',mileage:'',cost:'',notes:''}
+
+  function render() {
+    wrap.innerHTML=''
+    const topRow=div('',{style:'display:flex;justify-content:flex-end;margin-bottom:12px'})
+    topRow.appendChild(btn('+ Add Entry','pri sm',()=>{showForm=true;render()}))
+    wrap.appendChild(topRow)
+
+    if(showForm){
+      const card=div('card',{style:'background:var(--blue-lt);border-color:#c7d7f7'})
+      const cb=div('card-body')
+      cb.appendChild(el('p',{txt:'New Maintenance Entry',style:'font-size:14px;font-weight:700;margin-bottom:12px'}))
+      const dateI=el('input',{type:'date',value:logForm.date}); dateI.oninput=e=>logForm.date=e.target.value
+      const typeSel=selectInput(MAINTENANCE_TYPES,logForm.type); typeSel.onchange=e=>logForm.type=e.target.value
+      const descI=textInput('What was done?',logForm.description); descI.oninput=e=>logForm.description=e.target.value
+      const miI=textInput('e.g. 45,230 mi',logForm.mileage); miI.oninput=e=>logForm.mileage=e.target.value
+      const costI=textInput('e.g. $89.00',logForm.cost); costI.oninput=e=>logForm.cost=e.target.value
+      const notesI=textareaInput('Additional notes...',logForm.notes,2); notesI.oninput=e=>logForm.notes=e.target.value
+      cb.appendChild(div('grid2',field('Date',dateI),field('Type',typeSel)))
+      cb.appendChild(field('Description',descI))
+      cb.appendChild(div('grid2',field('Mileage / Hours',miI),field('Cost',costI)))
+      cb.appendChild(field('Notes',notesI))
+      cb.appendChild(div('btn-row',{style:'margin-top:12px'},
+        btn('Cancel','gho',()=>{showForm=false;render()}),
+        btn('Save Entry','pri',async()=>{
+          if(!logForm.type){alert('Please select a type');return}
+          syncDot('saving')
+          let vid=vehicleId
+          if(!vid){const{data:v}=await saveVehicle(vehicleType,{});vid=v?.id}
+          const{data:ud}=await getSB().auth.getUser()
+          await getSB().from('maintenance_logs').insert({vehicle_id:vid,vehicle_type:vehicleType,date:logForm.date,type:logForm.type,description:logForm.description||null,mileage:logForm.mileage||null,cost:logForm.cost||null,notes:logForm.notes||null,user_id:ud.user.id})
+          syncDot('')
+          logs = await reloadFn()
+          logForm={date:localToday(),type:'',description:'',mileage:'',cost:'',notes:''}
+          showForm=false; render()
+        })
+      ))
+      card.appendChild(cb); wrap.appendChild(card)
+    }
+
+    if(!logs.length&&!showForm){wrap.appendChild(el('p',{cls:'empty-msg',txt:'No maintenance entries yet.'}));return}
+    for(const log of logs){
+      const entry=div('maint-entry')
+      const topRow2=div('',{style:'display:flex;justify-content:space-between;align-items:flex-start'})
+      const left2=div('')
+      const typeLabel=MAINTENANCE_TYPES.find(t=>t.value===log.type)?.label||log.type
+      left2.appendChild(el('span',{cls:'maint-type',txt:typeLabel}))
+      left2.appendChild(el('span',{cls:'maint-date',txt:fmtDate(log.date)}))
+      topRow2.appendChild(left2)
+      const delBtn=el('button',{cls:'btn dan sm',txt:'✕',onclick:async()=>{
+        if(!await confirm2('Delete entry?','This cannot be undone.')) return
+        await getSB().from('maintenance_logs').delete().eq('id',log.id)
+        logs=await reloadFn(); render()
+      }})
+      topRow2.appendChild(delBtn)
+      entry.appendChild(topRow2)
+      if(log.description)entry.appendChild(el('p',{cls:'maint-desc',txt:log.description}))
+      const meta=div('maint-meta')
+      if(log.mileage)meta.appendChild(el('span',{txt:'📍 '+log.mileage}))
+      if(log.cost)meta.appendChild(el('span',{txt:'💰 '+log.cost}))
+      if(meta.children.length)entry.appendChild(meta)
+      if(log.notes)entry.appendChild(el('p',{style:'font-size:12px;color:var(--gray-400);font-style:italic;margin-top:4px',txt:log.notes}))
+      wrap.appendChild(entry)
+    }
+  }
+  render()
+  return wrap
+}
+
+async function saveVehicle(type, data) {
+  const {data:ud}=await getSB().auth.getUser()
+  const {data:existing}=await getSB().from('vehicles').select('id').eq('vehicle_type',type).maybeSingle()
+  if(existing){
+    const {data:r}=await getSB().from('vehicles').update({...data,updated_at:new Date().toISOString()}).eq('id',existing.id).select().single()
+    return {data:r}
+  } else {
+    const {data:r}=await getSB().from('vehicles').insert({...data,vehicle_type:type,user_id:ud.user.id}).select().single()
+    return {data:r}
+  }
+}
+
+async function handleVehiclePhoto(e, type, vehicleId, pageId, contentId, title) {
+  const file=e.target.files[0]; if(!file) return
+  syncDot('saving')
+  const {data:ud}=await getSB().auth.getUser()
+  let vid=vehicleId
+  if(!vid){const{data:v}=await saveVehicle(type,{});vid=v?.id}
+  // Delete old
+  const {data:veh}=await getSB().from('vehicles').select('photo_path').eq('id',vid).single()
+  if(veh?.photo_path) await getSB().storage.from('photos').remove([veh.photo_path])
+  const ext=file.name.split('.').pop()
+  const path=`${ud.user.id}/vehicles/${vid}.${ext}`
+  await getSB().storage.from('photos').upload(path,file,{upsert:true})
+  await getSB().from('vehicles').update({photo_path:path}).eq('id',vid)
+  syncDot(''); toast('Photo saved')
+  if(type==='camper') openCamper(); else openVehicle()
+}
+
+// ── SETTINGS ──────────────────────────────────────────────
+function renderSettings() {
+  const c = document.getElementById('settings-content')
+  c.innerHTML=''
+  c.classList.add('fade-in')
+
+  const name = currentUser?.user_metadata?.name||''
+  const email = currentUser?.email||''
+
+  // User header
+  const userCard=div('card'); const ub=div('card-body',{style:'display:flex;align-items:center;gap:12px'})
+  ub.appendChild(el('div',{txt:(name||email||'?')[0].toUpperCase(),style:'width:48px;height:48px;border-radius:50%;background:var(--blue);color:#fff;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0'}))
+  const uInfo=div('')
+  uInfo.appendChild(el('div',{txt:name||'No name set',style:'font-size:16px;font-weight:700'}))
+  uInfo.appendChild(el('div',{txt:email,style:'font-size:13px;color:var(--gray-500)'}))
+  ub.appendChild(uInfo); userCard.appendChild(ub); c.appendChild(userCard)
+
+  // Settings rows
+  function settingsCard(rows) {
+    const card=div('card',{style:'overflow:hidden'})
+    for(const row of rows) card.appendChild(row)
+    return card
+  }
+
+  // Change Name
+  let expandedSection = null
+  const nameExpand=div('settings-expand',{style:'display:none'})
+  const nameInput=textInput('Your name',name)
+  const nameMsg=div('',{style:'display:none'})
+  nameExpand.appendChild(field('New Name',nameInput))
+  nameExpand.appendChild(nameMsg)
+  nameExpand.appendChild(div('btn-row',{style:'margin-top:8px'},
+    btn('Cancel','gho',()=>{nameExpand.style.display='none';expandedSection=null}),
+    btn('Save Name','pri',async()=>{
+      if(!nameInput.value.trim()){nameMsg.className='err-msg';nameMsg.textContent='Name required';nameMsg.style.display='';return}
+      const{error}=await getSB().auth.updateUser({data:{name:nameInput.value.trim()}})
+      if(error){nameMsg.className='err-msg';nameMsg.textContent=error.message;nameMsg.style.display=''}
+      else{nameMsg.className='ok-msg';nameMsg.textContent='Name updated!';nameMsg.style.display='';currentUser.user_metadata={...currentUser.user_metadata,name:nameInput.value.trim()};setTimeout(()=>renderSettings(),1500)}
+    })
+  ))
+
+  // Change Password
+  const pwExpand=div('settings-expand',{style:'display:none'})
+  const newPwI=textInput('At least 6 characters','','password')
+  const confPwI=textInput('••••••••','','password')
+  const pwMsg=div('',{style:'display:none'})
+  pwExpand.appendChild(field('New Password',newPwI))
+  pwExpand.appendChild(field('Confirm Password',confPwI))
+  pwExpand.appendChild(pwMsg)
+  pwExpand.appendChild(div('btn-row',{style:'margin-top:8px'},
+    btn('Cancel','gho',()=>{pwExpand.style.display='none';expandedSection=null}),
+    btn('Update Password','pri',async()=>{
+      if(newPwI.value.length<6){pwMsg.className='err-msg';pwMsg.textContent='At least 6 characters';pwMsg.style.display='';return}
+      if(newPwI.value!==confPwI.value){pwMsg.className='err-msg';pwMsg.textContent='Passwords do not match';pwMsg.style.display='';return}
+      const{error}=await getSB().auth.updateUser({password:newPwI.value})
+      if(error){pwMsg.className='err-msg';pwMsg.textContent=error.message;pwMsg.style.display=''}
+      else{pwMsg.className='ok-msg';pwMsg.textContent='Password updated!';pwMsg.style.display=''}
+    })
+  ))
+
+  // Delete account
+  const delExpand=div('settings-expand',{style:'display:none;background:var(--red-lt)'})
+  const delConfirmI=textInput('DELETE','')
+  const delMsg=div('',{style:'display:none'})
+  const warning=div('',{style:'background:#fee2e2;border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px;color:#991b1b'})
+  warning.innerHTML='<strong>⚠️ This will permanently delete:</strong><ul style="margin:6px 0 0 16px"><li>All your trips</li><li>All your stops and notes</li><li>All your photos</li><li>Your account</li></ul><p style="margin-top:6px"><strong>This cannot be undone.</strong></p>'
+  delExpand.appendChild(warning)
+  delExpand.appendChild(field('Type DELETE to confirm',delConfirmI))
+  delExpand.appendChild(delMsg)
+  delExpand.appendChild(div('btn-row',{style:'margin-top:8px'},
+    btn('Cancel','gho',()=>{delExpand.style.display='none';expandedSection=null}),
+    btn('Delete Everything','dan',async()=>{
+      if(delConfirmI.value!=='DELETE'){delMsg.className='err-msg';delMsg.textContent='Type DELETE to confirm';delMsg.style.display='';return}
+      const{error}=await getSB().rpc('delete_user')
+      if(error){delMsg.className='err-msg';delMsg.textContent=error.message;delMsg.style.display=''}
+      else{await getSB().auth.signOut();currentUser=null;showAuth()}
+    })
+  ))
+
+  function mkRow(icon,label,bg,color,onClick,expandEl=null) {
+    const row=el('button',{cls:'settings-row',onclick:()=>{
+      if(expandEl){
+        const isOpen=expandEl.style.display!=='none'
+        document.querySelectorAll('.settings-expand').forEach(e=>e.style.display='none')
+        if(!isOpen){expandEl.style.display='';expandedSection=expandEl}
+      } else onClick()
+    }})
+    const iconEl=el('div',{cls:'settings-icon',txt:icon,style:`background:${bg};`})
+    row.appendChild(iconEl)
+    row.appendChild(el('span',{cls:'settings-label',style:`color:${color||''}`,txt:label}))
+    row.appendChild(el('span',{cls:'settings-chevron',txt:'›'}))
+    return row
+  }
+
+  c.appendChild(settingsCard([
+    mkRow('👤','Change Name','#EEF2FB','',null,nameExpand), nameExpand,
+    mkRow('🔒','Change Password','#F5F3FF','',null,pwExpand), pwExpand,
+  ]))
+  c.appendChild(settingsCard([
+    mkRow('💬','Send Feedback','#EFF6FF','',()=>{openFeedback()})
+  ]))
+  c.appendChild(settingsCard([
+    mkRow('🚪','Sign Out','var(--gray-100)','',async()=>{
+      await getSB().auth.signOut(); currentUser=null; showAuth()
+    })
+  ]))
+  c.appendChild(settingsCard([
+    mkRow('🗑','Delete Account','var(--red-lt)','var(--red)',null,delExpand), delExpand
+  ]))
+
+  c.appendChild(el('p',{txt:'My RV Journal • Version 1.09b',style:'text-align:center;font-size:12px;color:var(--gray-400);margin-top:24px'}))
+  const links=div('',{style:'display:flex;justify-content:center;gap:16px;margin-top:8px'})
+  for(const[label,page] of [['Privacy Policy','privacy-page'],['Terms of Service','terms-page']]){
+    const b=el('button',{txt:label,onclick:()=>navToPage(page),style:'background:none;border:none;font-size:12px;color:var(--gray-400);cursor:pointer;font-family:inherit'})
+    links.appendChild(b)
+  }
+  c.appendChild(links)
+}
+
+// ── FEEDBACK ──────────────────────────────────────────────
+// ── FEEDBACK ──────────────────────────────────────────────
+function openFeedback() {
+  navToPage('feedback-page')
+  const c=document.getElementById('feedback-content')
+  c.innerHTML=''; c.classList.add('fade-in')
+  c.appendChild(backBtn('Settings',()=>switchTab('settings')))
+  c.appendChild(el('h1',{txt:'Send Feedback',style:'font-size:22px;font-weight:800;margin-bottom:4px'}))
+  c.appendChild(el('p',{txt:"Bug reports, suggestions, or anything on your mind — we'd love to hear it.",style:'font-size:14px;color:var(--gray-500);margin-bottom:20px'}))
+  const catSel=selectInput([{value:'bug',label:'🐛 Bug Report'},{value:'suggestion',label:'💡 Suggestion'},{value:'general',label:'💬 General Feedback'},{value:'other',label:'📝 Other'}],'')
+  const msgI=textareaInput("Describe your feedback in as much detail as you'd like...",'',6)
+  const errEl=div('err-msg'); errEl.style.display='none'
+  const sendBtn=btn('📤 Send Feedback','pri full',async()=>{
+    errEl.style.display='none'
+    if(!catSel.value){errEl.textContent='Please select a category.';errEl.style.display='';return}
+    if(msgI.value.trim().length<10){errEl.textContent='Please provide a bit more detail.';errEl.style.display='';return}
+    const{error}=await getSB().from('feedback').insert({user_id:currentUser.id,user_email:currentUser.email,user_name:currentUser.user_metadata?.name||'',category:catSel.value,message:msgI.value.trim()})
+    if(error){errEl.textContent='Something went wrong. Please try again.';errEl.style.display='';return}
+    c.innerHTML=''
+    const suc=div('feedback-success')
+    const icon=div('feedback-success-icon'); icon.textContent='✓'; suc.appendChild(icon)
+    suc.appendChild(el('h2',{txt:'Thank you!',style:'font-size:24px;font-weight:800;margin-bottom:8px'}))
+    suc.appendChild(el('p',{txt:'Your feedback has been received.',style:'font-size:14px;color:var(--gray-500)'}))
+    const backBtn2=btn('Back to Settings','pri',()=>switchTab('settings')); backBtn2.style.marginTop='24px'
+    suc.appendChild(backBtn2); c.appendChild(suc)
+  })
+  sendBtn.style.marginTop='12px'
+  const card=div('card'); const cb=div('card-body')
+  cb.appendChild(field('Category',catSel))
+  cb.appendChild(field('Your Message',msgI))
+  cb.appendChild(errEl); cb.appendChild(sendBtn)
+  if(currentUser?.email)cb.appendChild(el('p',{txt:`Submitted as: ${currentUser.email}`,style:'font-size:11px;color:var(--gray-400);text-align:center;margin-top:8px'}))
+  card.appendChild(cb); c.appendChild(card)
+}
+
+// ── TERMS & PRIVACY (static pages) ────────────────────────
+function renderTerms() {
+  const c=document.getElementById('terms-content'); c.innerHTML=''
+  c.appendChild(backBtn('Back',goBack))
+  c.appendChild(el('h1',{txt:'Terms of Service',style:'font-size:22px;font-weight:800;margin-bottom:16px'}))
+  const text=`My RV Journal is a personal travel journaling application.
+
+By using this app, you agree to use it responsibly and in accordance with applicable laws.
+
+Your data is stored securely via Supabase and is private to your account. We do not share your data with third parties.
+
+You may delete your account and all associated data at any time from the Settings page.
+
+This app is provided as-is without warranty of any kind. We are not responsible for data loss due to technical issues.
+
+These terms may be updated from time to time. Continued use of the app constitutes acceptance of the updated terms.`
+  c.appendChild(el('p',{txt:text,style:'font-size:14px;color:var(--gray-700);white-space:pre-wrap;line-height:1.7'}))
+}
+
+function renderPrivacy() {
+  const c=document.getElementById('privacy-content'); c.innerHTML=''
+  c.appendChild(backBtn('Back',goBack))
+  c.appendChild(el('h1',{txt:'Privacy Policy',style:'font-size:22px;font-weight:800;margin-bottom:16px'}))
+  const text=`My RV Journal takes your privacy seriously.
+
+What we collect:
+• Your email address and name (for your account)
+• Trip, stop, and vehicle data you enter
+• Photos you upload
+
+How we use it:
+• To provide the journaling service
+• Your data is only accessible by you
+• We do not sell or share your data with third parties
+
+Data storage:
+• All data is stored securely via Supabase
+• Photos are stored in Supabase Storage
+
+Data deletion:
+• You can delete your account and all data from Settings at any time
+
+Contact:
+• For privacy questions, use the Feedback form in Settings`
+  c.appendChild(el('p',{txt:text,style:'font-size:14px;color:var(--gray-700);white-space:pre-wrap;line-height:1.7'}))
+}
+
+// ── INIT ──────────────────────────────────────────────────
+async function init() {
+  // Check for password reset token in URL
+  const hash = window.location.hash
+  if (hash.includes('type=recovery')) {
+    // Show password reset form
+    document.getElementById('reset-screen').classList.add('show')
+    const card = document.querySelector('#reset-screen .auth-card')
+    card.innerHTML = '<h2 style="font-size:20px;font-weight:800;margin-bottom:16px">Set New Password</h2>'
+    const pwI = el('input',{type:'password',placeholder:'New password (at least 6 chars)'})
+    const pwI2 = el('input',{type:'password',placeholder:'Confirm new password',style:'margin-top:10px'})
+    const msgEl = div('',{style:'display:none;margin-bottom:8px'})
+    card.appendChild(pwI); card.appendChild(pwI2); card.appendChild(msgEl)
+    const setBtn = btn('Set New Password','pri full',async()=>{
+      if(pwI.value.length<6){msgEl.className='err-msg';msgEl.textContent='At least 6 characters';msgEl.style.display='';return}
+      if(pwI.value!==pwI2.value){msgEl.className='err-msg';msgEl.textContent='Passwords do not match';msgEl.style.display='';return}
+      const{error}=await getSB().auth.updateUser({password:pwI.value})
+      if(error){msgEl.className='err-msg';msgEl.textContent=error.message;msgEl.style.display=''}
+      else{msgEl.className='ok-msg';msgEl.textContent='Password updated! Signing you in...';msgEl.style.display='';setTimeout(()=>{window.location.hash='';location.reload()},1500)}
+    })
+    setBtn.style.marginTop='14px'; card.appendChild(setBtn)
+    return
+  }
+
+  const {data:{session}} = await getSB().auth.getSession()
+  if (session?.user) {
+    currentUser = session.user
+    showApp()
+    switchTab('home')
+  } else {
+    showAuth()
+  }
+
+  getSB().auth.onAuthStateChange((event, session) => {
+    if (event==='SIGNED_IN' && session?.user) { currentUser=session.user; showApp(); switchTab('home') }
+    if (event==='SIGNED_OUT') { currentUser=null; showAuth() }
+  })
+}
+
+// Terms/Privacy routing handled inside navToPage checks at call sites
+
+init()
+</script>
+</body>
+</html>
