@@ -39,10 +39,6 @@ html,body{height:100%;background:var(--gray-50);font-family:system-ui,-apple-sys
 .hdr-icon{width:34px;height:34px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
 .hdr-title{font-size:18px;font-weight:800;color:#fff}
 .hdr-sub{font-size:11px;color:rgba(255,255,255,.6)}
-.sync-dot{width:8px;height:8px;border-radius:50%;background:#4ade80}
-.sync-dot.saving{background:#fbbf24;animation:blink 1s infinite}
-.sync-dot.err{background:#f87171}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .nav-tabs{display:flex;gap:0}
 .nav-tab{flex:1;padding:10px 4px 10px;font-size:11px;font-weight:600;border:none;background:transparent;color:rgba(255,255,255,.55);border-bottom:3px solid transparent;cursor:pointer;font-family:inherit;transition:all .15s;letter-spacing:.01em}
 .nav-tab.on{color:#fff;border-bottom-color:#fff}
@@ -349,7 +345,6 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
           <div class="hdr-sub">Your travel archive</div>
         </div>
       </div>
-      <div class="sync-dot" id="sync-dot" title="Synced"></div>
     </div>
     <div class="nav-tabs">
       <button class="nav-tab on" data-tab="home" onclick="switchTab('home')">🏠 Home</button>
@@ -386,7 +381,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 </div>
 
 <!-- ══ ADD/EDIT MODAL ═══════════════════════════════════ -->
-<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModalDirect()">
   <div class="modal" id="modal-box">
     <div class="modal-title" id="modal-title"></div>
     <div id="modal-body"></div>
@@ -467,10 +462,7 @@ function toast(msg, dur=2500) {
   setTimeout(() => t.classList.remove('show'), dur)
 }
 
-function syncDot(state) {
-  const d = document.getElementById('sync-dot')
-  d.className = 'sync-dot' + (state === 'saving' ? ' saving' : state === 'err' ? ' err' : '')
-}
+
 
 function localToday() {
   const d = new Date()
@@ -587,9 +579,13 @@ function openModal(title, bodyEl, actions=[]) {
   document.getElementById('modal-overlay').classList.add('show')
 }
 function closeModal(e) {
-  if (!e || e.target === document.getElementById('modal-overlay')) {
+  // Works when called directly (no event) OR as backdrop click OR as button click
+  if (!e || e.target === document.getElementById('modal-overlay') || e.currentTarget?.tagName === 'BUTTON') {
     document.getElementById('modal-overlay').classList.remove('show')
   }
+}
+function closeModalDirect() {
+  document.getElementById('modal-overlay').classList.remove('show')
 }
 
 // ── COLLAPSIBLE SECTION ───────────────────────────────────
@@ -864,8 +860,7 @@ function showAddTripModal(existing=null) {
   const saveBtn2 = btn(existing?'Save Changes':'Create Trip','pri', async () => {
     const name = nameI.value.trim()
     if (!name) { errEl.textContent='Please enter a trip name.'; errEl.style.display=''; return }
-    syncDot('saving')
-    if (existing) {
+        if (existing) {
       await getSB().from('trips').update({name,start_date:startI.value||null,end_date:endI.value||null,notes:notesI.value||null,updated_at:new Date().toISOString()}).eq('id',existing.id)
       closeModal()
       toast('Trip updated!')
@@ -873,12 +868,12 @@ function showAddTripModal(existing=null) {
     } else {
       const {data:user} = await getSB().auth.getUser()
       const {data,error} = await getSB().from('trips').insert({name,start_date:startI.value||null,end_date:endI.value||null,notes:notesI.value||null,status:'planned',user_id:user.user.id}).select().single()
-      if (error) { errEl.textContent=error.message; errEl.style.display=''; syncDot(''); return }
-      closeModal(); syncDot(''); toast('Trip created!')
+      if (error) { errEl.textContent=error.message; errEl.style.display=''; ; return }
+      closeModal(); ; toast('Trip created!')
       openTrip(data.id)
     }
   })
-  openModal(existing?'Edit Trip':'New Trip', body, [btn('Cancel','gho',closeModal), saveBtn2])
+  openModal(existing?'Edit Trip':'New Trip', body, [btn('Cancel','gho',closeModalDirect), saveBtn2])
 }
 
 // ── TRIP DETAIL ───────────────────────────────────────────
@@ -977,19 +972,17 @@ function showAddStopModal(tripId, tripName, onDone) {
   const saveBtn2 = btn('Create Stop','pri', async()=>{
     const name = nameI.value.trim()
     if (!name) { errEl.textContent='Please enter a name.'; errEl.style.display=''; return }
-    syncDot('saving')
-    const {data:ud} = await getSB().auth.getUser()
+        const {data:ud} = await getSB().auth.getUser()
     const {data,error} = await getSB().from('stops').insert({
       trip_id:tripId, name, status:'planned',
       arrival_date:arrI.value||null, departure_date:depI.value||null,
       user_id:ud.user.id
     }).select().single()
-    syncDot('')
-    if (error) { errEl.textContent=error.message; errEl.style.display=''; return }
+        if (error) { errEl.textContent=error.message; errEl.style.display=''; return }
     closeModal(); toast('Stop added!')
     showWizard(data.id)
   })
-  openModal('New Stop', body, [btn('Cancel','gho',closeModal), saveBtn2])
+  openModal('New Stop', body, [btn('Cancel','gho',closeModalDirect), saveBtn2])
 }
 
 // ── WIZARD ────────────────────────────────────────────────
@@ -1078,8 +1071,7 @@ function renderWizStep() {
   if (wizStep<5) nav.appendChild(btn(wizStep===3&&!wizData.rating?'Skip':'Continue','pri', ()=>{wizStep++;renderWizStep()}))
   if (wizStep===5) nav.appendChild(btn(wizData.note?'Continue':'Skip','pri', ()=>{wizStep++;renderWizStep()}))
   if (wizStep===6) nav.appendChild(btn('Open My Stop','pri', async()=>{
-    syncDot('saving')
-    await getSB().from('stops').update({status:'active',arrival_date:wizData.arrivalDate,rating:wizData.rating,updated_at:new Date().toISOString()}).eq('id',wizStopId)
+        await getSB().from('stops').update({status:'active',arrival_date:wizData.arrivalDate,rating:wizData.rating,updated_at:new Date().toISOString()}).eq('id',wizStopId)
     if (wizData.siteNumber.trim()) {
       await getSB().from('stop_site').upsert({stop_id:wizStopId,site_number:wizData.siteNumber},{onConflict:'stop_id'})
     }
@@ -1094,8 +1086,7 @@ function renderWizStep() {
       const {count} = await getSB().from('photos').select('*',{count:'exact',head:true}).eq('stop_id',wizStopId)
       await getSB().from('photos').insert({stop_id:wizStopId,user_id:ud.user.id,storage_path:path,is_cover:!count||count===0})
     }
-    syncDot('')
-    document.getElementById('wizard-screen').classList.remove('show')
+        document.getElementById('wizard-screen').classList.remove('show')
     showApp()
     openStop(wizStopId)
   }))
@@ -1204,11 +1195,10 @@ async function openStop(stopId) {
       const {data:ud}=await getSB().auth.getUser()
       const ext=file.name.split('.').pop()
       const path=`${ud.user.id}/${stopId}/${Date.now()}.${ext}`
-      syncDot('saving')
-      await getSB().storage.from('photos').upload(path,file)
+            await getSB().storage.from('photos').upload(path,file)
       const isCover = photos.length===0
       await getSB().from('photos').insert({stop_id:stopId,user_id:ud.user.id,storage_path:path,is_cover:isCover})
-      syncDot(''); toast('Photo added'); openStop(stopId)
+      ; toast('Photo added'); openStop(stopId)
     }
     uploadLabel.appendChild(fileInput)
     photoTopRow.appendChild(uploadLabel)
@@ -1271,11 +1261,10 @@ function showEditStopModal(stop, onDone) {
   body.appendChild(errEl)
   const saveBtn2 = btn('Save','pri', async()=>{
     if (!nameI.value.trim()) { errEl.textContent='Name required'; errEl.style.display=''; return }
-    syncDot('saving')
-    await getSB().from('stops').update({name:nameI.value.trim(),arrival_date:arrI.value||null,departure_date:depI.value||null,updated_at:new Date().toISOString()}).eq('id',stop.id)
-    syncDot(''); closeModal(); toast('Saved'); onDone()
+        await getSB().from('stops').update({name:nameI.value.trim(),arrival_date:arrI.value||null,departure_date:depI.value||null,updated_at:new Date().toISOString()}).eq('id',stop.id)
+    ; closeModal(); toast('Saved'); onDone()
   })
-  openModal('Edit Stop', body, [btn('Cancel','gho',closeModal), saveBtn2])
+  openModal('Edit Stop', body, [btn('Cancel','gho',closeModalDirect), saveBtn2])
 }
 
 // ── STOP SECTIONS ─────────────────────────────────────────
@@ -1337,9 +1326,8 @@ function journalSection(stopId, initial) {
         btn('Cancel','gho',done),
         btn('Save Journal','pri',async()=>{
           data.general_notes=gnI.value; data.favorite_memory=fmI.value; data.visit_next_time=vnI.value
-          syncDot('saving')
-          await getSB().from('stop_journal').upsert({stop_id:stopId,...data},{onConflict:'stop_id'})
-          syncDot(''); toast('Journal saved'); done()
+                    await getSB().from('stop_journal').upsert({stop_id:stopId,...data},{onConflict:'stop_id'})
+          ; toast('Journal saved'); done()
         })
       ))
     },
@@ -1400,9 +1388,8 @@ function siteSection(stopId, initial) {
         btn('Save','pri',async()=>{
           const saveData={...data,site_number:snI.value,back_in_pull_thru:tpI.value,site_size:szI.value,shade:shI.value,view:vwI.value,noise:noI.value,...toggles,wildlife_notes:wlI.value,site_notes:snI2.value}
           Object.assign(data,saveData)
-          syncDot('saving')
-          await getSB().from('stop_site').upsert({stop_id:stopId,...saveData},{onConflict:'stop_id'})
-          syncDot(''); toast('Saved'); done()
+                    await getSB().from('stop_site').upsert({stop_id:stopId,...saveData},{onConflict:'stop_id'})
+          ; toast('Saved'); done()
         })
       ))
     },
@@ -1483,9 +1470,8 @@ function utilitiesSection(stopId, initial) {
         btn('Save','pri',async()=>{
           const saveData={...toggleState,dump_station:dumpI.value,generator_rules:genI.value,wifi_rating:wifiRating,cell_verizon:vzI.value,cell_att:atI.value,cell_tmobile:tmI.value,cell_other:otI.value,connectivity_notes:connI.value}
           Object.assign(data,saveData)
-          syncDot('saving')
-          await getSB().from('stop_utilities').upsert({stop_id:stopId,...saveData},{onConflict:'stop_id'})
-          syncDot(''); toast('Saved'); done()
+                    await getSB().from('stop_utilities').upsert({stop_id:stopId,...saveData},{onConflict:'stop_id'})
+          ; toast('Saved'); done()
         })
       ))
     },
@@ -1543,9 +1529,8 @@ function facilitiesSection(stopId, initial) {
         btn('Cancel','gho',done),
         btn('Save','pri',async()=>{
           const saveData={...ts,bathhouse_cleanliness:cleanRating,bathhouse_notes:bnI.value,amenity_notes:anI.value}
-          Object.assign(data,saveData); syncDot('saving')
-          await getSB().from('stop_facilities').upsert({stop_id:stopId,...saveData},{onConflict:'stop_id'})
-          syncDot(''); toast('Saved'); done()
+          Object.assign(data,saveData);           await getSB().from('stop_facilities').upsert({stop_id:stopId,...saveData},{onConflict:'stop_id'})
+          ; toast('Saved'); done()
         })
       ))
     },
@@ -1583,9 +1568,8 @@ function localSection(stopId, initial) {
         btn('Cancel','gho',done),
         btn('Save','pri',async()=>{
           const saveData={weather:wI.value,nearby_sightseeing:nsI.value,nearby_restaurants:nrI.value,grocery_distance:gdI.value,places_visited:pvI.value,visit_next_time:vnI.value,local_notes:lnI.value}
-          Object.assign(data,saveData); syncDot('saving')
-          await getSB().from('stop_local').upsert({stop_id:stopId,...saveData},{onConflict:'stop_id'})
-          syncDot(''); toast('Saved'); done()
+          Object.assign(data,saveData);           await getSB().from('stop_local').upsert({stop_id:stopId,...saveData},{onConflict:'stop_id'})
+          ; toast('Saved'); done()
         })
       ))
     },
@@ -1622,9 +1606,8 @@ function travelSection(stopId, initial) {
         btn('Cancel','gho',done),
         btn('Save','pri',async()=>{
           const saveData={cost:cI.value,miles_traveled:mI.value,travel_time:ttI.value,travel_notes:tnI.value,how_found:hfI.value,management_notes:mnI.value,scenery_notes:snI.value,parking_notes:pnI.value,road_notes:rnI.value}
-          Object.assign(data,saveData); syncDot('saving')
-          await getSB().from('stop_travel').upsert({stop_id:stopId,...saveData},{onConflict:'stop_id'})
-          syncDot(''); toast('Saved'); done()
+          Object.assign(data,saveData);           await getSB().from('stop_travel').upsert({stop_id:stopId,...saveData},{onConflict:'stop_id'})
+          ; toast('Saved'); done()
         })
       ))
     },
@@ -1875,13 +1858,11 @@ function maintenanceSection(vehicleId, vehicleType, initialLogs, reloadFn) {
         btn('Cancel','gho',()=>{showForm=false;render()}),
         btn('Save Entry','pri',async()=>{
           if(!logForm.type){alert('Please select a type');return}
-          syncDot('saving')
-          let vid=vehicleId
+                    let vid=vehicleId
           if(!vid){const{data:v}=await saveVehicle(vehicleType,{});vid=v?.id}
           const{data:ud}=await getSB().auth.getUser()
           await getSB().from('maintenance_logs').insert({vehicle_id:vid,vehicle_type:vehicleType,date:logForm.date,type:logForm.type,description:logForm.description||null,mileage:logForm.mileage||null,cost:logForm.cost||null,notes:logForm.notes||null,user_id:ud.user.id})
-          syncDot('')
-          logs = await reloadFn()
+                    logs = await reloadFn()
           logForm={date:localToday(),type:'',description:'',mileage:'',cost:'',notes:''}
           showForm=false; render()
         })
@@ -1932,8 +1913,7 @@ async function saveVehicle(type, data) {
 
 async function handleVehiclePhoto(e, type, vehicleId, pageId, contentId, title) {
   const file=e.target.files[0]; if(!file) return
-  syncDot('saving')
-  const {data:ud}=await getSB().auth.getUser()
+    const {data:ud}=await getSB().auth.getUser()
   let vid=vehicleId
   if(!vid){const{data:v}=await saveVehicle(type,{});vid=v?.id}
   // Delete old
@@ -1943,7 +1923,7 @@ async function handleVehiclePhoto(e, type, vehicleId, pageId, contentId, title) 
   const path=`${ud.user.id}/vehicles/${vid}.${ext}`
   await getSB().storage.from('photos').upload(path,file,{upsert:true})
   await getSB().from('vehicles').update({photo_path:path}).eq('id',vid)
-  syncDot(''); toast('Photo saved')
+  ; toast('Photo saved')
   if(type==='camper') openCamper(); else openVehicle()
 }
 
