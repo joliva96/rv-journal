@@ -347,9 +347,9 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       </div>
     </div>
     <div class="nav-tabs">
-      <button class="nav-tab on" data-tab="home" onclick="switchTab('home')">🏠 Home</button>
-      <button class="nav-tab" data-tab="vehicles" onclick="switchTab('vehicles')">🚗 Vehicles</button>
-      <button class="nav-tab" data-tab="settings" onclick="switchTab('settings')">⚙️ Settings</button>
+      <button class="nav-tab on" data-tab="home" onclick="switchTab('home')">Home</button>
+      <button class="nav-tab" data-tab="vehicles" onclick="switchTab('vehicles')">Vehicles</button>
+      <button class="nav-tab" data-tab="settings" onclick="switchTab('settings')">Settings</button>
     </div>
   </div>
 
@@ -483,7 +483,7 @@ function fmtDateRange(start, end) {
 }
 
 function statusBadge(status) {
-  const icons = {planned:'📋',active:'✈️',completed:'✓'}
+  const icons = {planned:'',active:'',completed:'✓'}
   const b = el('span', {cls:`badge ${status}`, txt:`${icons[status]||''} ${status}`})
   return b
 }
@@ -593,7 +593,7 @@ function collapsible(icon, title, bodyEl, defaultOpen=false) {
   const wrap = div('coll')
   const hdr = el('button', {cls:'coll-hdr'})
   const left = div('coll-hdr-left')
-  left.appendChild(el('span', {cls:'coll-icon', txt:icon}))
+  if (icon) left.appendChild(el('span', {cls:'coll-icon', txt:icon}))
   left.appendChild(el('span', {txt:title}))
   const chev = el('span', {cls:`coll-chevron${defaultOpen?' open':''}`, txt:'›'})
   hdr.appendChild(left)
@@ -728,7 +728,7 @@ async function renderHome() {
   const searchInput = el('input', {type:'text', placeholder:'Search trips and stops...'})
   searchInput.style.paddingLeft = '36px'
   const searchWrap = div('search-wrap')
-  searchWrap.appendChild(el('span', {cls:'search-icon', txt:'🔍'}))
+  searchWrap.appendChild(el('span', {cls:'search-icon', txt:''}))
   searchWrap.appendChild(searchInput)
   c.appendChild(searchWrap)
 
@@ -759,7 +759,7 @@ async function renderHome() {
       ])
       resultsEl.innerHTML = ''
       if (!tr.data?.length && !sr.data?.length) {
-        resultsEl.appendChild(emptyState('🔍','No results',`Nothing matched "${search}"`))
+        resultsEl.appendChild(emptyState('','No results',`Nothing matched "${search}"`))
         return
       }
       if (tr.data?.length) {
@@ -780,7 +780,7 @@ async function renderHome() {
   function sortAndRender(sort) {
     resultsEl.innerHTML = ''
     if (!allTrips.length) {
-      resultsEl.appendChild(emptyState('🗺️','No trips yet','Tap + to create your first trip'))
+      resultsEl.appendChild(emptyState('','No trips yet','Tap + to create your first trip'))
       return
     }
     const sorted = [...allTrips].sort((a,b) => {
@@ -836,7 +836,7 @@ function stopSearchCard(stop) {
   const left = div('')
   left.appendChild(statusBadge(stop.status||'planned'))
   left.appendChild(el('div', {cls:'trip-name', txt:stop.name}))
-  if (stop.trip) left.appendChild(el('div', {cls:'trip-date', txt:'📍 '+stop.trip.name}))
+  if (stop.trip) left.appendChild(el('div', {cls:'trip-date', txt:''+stop.trip.name}))
   c.appendChild(left)
   c.appendChild(el('span', {cls:'trip-chevron', txt:'›'}))
   c.onclick = () => openStop(stop.id)
@@ -949,7 +949,7 @@ async function openTrip(tripId) {
 
   // Delete trip
   c.appendChild(el('div',{style:'height:20px'}))
-  c.appendChild(btn('🗑 Delete Trip','dan full sm', async()=>{
+  c.appendChild(btn('Delete Trip','dan full sm', async()=>{
     if (!await confirm2('Delete trip?','All stops and data will be permanently deleted.')) return
     await getSB().from('trips').delete().eq('id',tripId)
     toast('Trip deleted'); switchTab('home')
@@ -1040,7 +1040,7 @@ function renderWizStep() {
       content.appendChild(prev)
     } else {
       const drop = div('photo-drop')
-      drop.innerHTML = '<div style="font-size:36px;margin-bottom:8px">📷</div><div style="font-size:14px;color:var(--gray-500)">Tap to choose a photo</div>'
+      drop.innerHTML = '<div style="font-size:36px;margin-bottom:8px"></div><div style="font-size:14px;color:var(--gray-500)">Tap to choose a photo</div>'
       const fileI = el('input',{type:'file',accept:'image/*',style:'display:none'})
       fileI.onchange = e => {
         const f=e.target.files[0]; if(!f) return
@@ -1060,7 +1060,7 @@ function renderWizStep() {
     content.appendChild(ta)
   }
   if (wizStep===6) {
-    const ic = div('',el('div',{style:'font-size:48px;margin-bottom:12px;text-align:center',txt:'✅'}))
+    const ic = div('',el('div',{style:'font-size:48px;margin-bottom:12px;text-align:center',txt:''}))
     content.appendChild(ic)
     content.appendChild(h("All set!"))
     content.appendChild(sub("You're checked in. You can add more details to this stop anytime."))
@@ -1142,7 +1142,7 @@ async function openStop(stopId) {
   sumTop.appendChild(editStopBtn)
   sumBody.appendChild(sumTop)
   sumBody.appendChild(el('h1',{txt:stop.name,style:'font-size:22px;font-weight:800;margin-bottom:4px'}))
-  if (stop.trip) sumBody.appendChild(el('p',{txt:'📍 '+stop.trip.name,style:'font-size:13px;color:var(--blue);font-weight:600;margin-bottom:8px'}))
+  if (stop.trip) sumBody.appendChild(el('p',{txt:''+stop.trip.name,style:'font-size:13px;color:var(--blue);font-weight:600;margin-bottom:8px'}))
 
   // Dates
   const dr = fmtDateRange(stop.arrival_date,stop.departure_date)
@@ -1152,13 +1152,14 @@ async function openStop(stopId) {
   if (stop.address || stop.phone) {
     const contactWrap = div('',{style:'display:flex;flex-direction:column;gap:6px;margin-bottom:10px'})
     if (stop.address) {
+      const mapsUrl = `https://maps.apple.com/?q=${encodeURIComponent(stop.address)}`
       const addrLink = el('a',{
-        href:`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address)}`,
+        href: mapsUrl,
         target:'_blank',
-        rel:'noopener',
+        rel:'noopener noreferrer external',
+        onclick: (e) => { e.preventDefault(); window.open(mapsUrl, '_blank', 'noopener,noreferrer') },
         style:'display:flex;align-items:center;gap:6px;font-size:13px;color:var(--blue);font-weight:600;text-decoration:none'
       })
-      addrLink.appendChild(el('span',{txt:'📍'}))
       addrLink.appendChild(el('span',{txt:stop.address,style:'text-decoration:underline'}))
       contactWrap.appendChild(addrLink)
     }
@@ -1167,7 +1168,6 @@ async function openStop(stopId) {
         href:`tel:${stop.phone.replace(/[^0-9+]/g,'')}`,
         style:'display:flex;align-items:center;gap:6px;font-size:13px;color:var(--blue);font-weight:600;text-decoration:none'
       })
-      phoneLink.appendChild(el('span',{txt:'📞'}))
       phoneLink.appendChild(el('span',{txt:stop.phone,style:'text-decoration:underline'}))
       contactWrap.appendChild(phoneLink)
     }
@@ -1211,7 +1211,7 @@ async function openStop(stopId) {
 
   // Photos section
   const photoCard = div('card'); const photoBody = div('card-body')
-  photoBody.appendChild(el('div',{style:'display:flex;justify-content:space-between;align-items:center;margin-bottom:10px',html:'<span style="font-size:14px;font-weight:700;color:var(--gray-800)">📷 Photos</span>'}))
+  photoBody.appendChild(el('div',{style:'display:flex;justify-content:space-between;align-items:center;margin-bottom:10px',html:'<span style="font-size:14px;font-weight:700;color:var(--gray-800)">Photos</span>'}))
   const photoTopRow = photoBody.querySelector('div')
   if (photos.length<3) {
     const uploadLabel = el('label',{cls:'btn sec sm',txt:'+ Add Photo'})
@@ -1267,7 +1267,7 @@ async function openStop(stopId) {
 
   // Delete
   c.appendChild(el('div',{style:'height:12px'}))
-  c.appendChild(btn('🗑 Delete Stop','dan full sm', async()=>{
+  c.appendChild(btn('Delete Stop','dan full sm', async()=>{
     if(!await confirm2('Delete stop?','All data for this stop will be permanently deleted.')) return
     const tripId=stop.trip_id
     await getSB().from('stops').delete().eq('id',stopId)
@@ -1327,7 +1327,7 @@ function journalSection(stopId, initial) {
     would_stay_again: initial?.would_stay_again||'',
     visit_next_time: initial?.visit_next_time||''
   }
-  return sectionWrap('📔','Personal Journal',
+  return sectionWrap('','Personal Journal',
     (container, done) => {
       const gnI=textareaInput('How was the stay?',data.general_notes,3)
       const fmI=textareaInput('What will you remember most?',data.favorite_memory,2)
@@ -1385,7 +1385,7 @@ function siteSection(stopId, initial) {
     has_fire_ring:initial?.has_fire_ring??false,has_picnic_table:initial?.has_picnic_table??false,has_grill:initial?.has_grill??false,
     wildlife_notes:initial?.wildlife_notes||'',site_notes:initial?.site_notes||''
   }
-  return sectionWrap('📍','Site Information',
+  return sectionWrap('','Site Information',
     (container, done) => {
       const snI=textInput('42',data.site_number)
       const tpI=selectInput([{value:'Back-In',label:'Back-In'},{value:'Pull-Thru',label:'Pull-Thru'}],data.back_in_pull_thru)
@@ -1453,11 +1453,13 @@ function utilitiesSection(stopId, initial) {
     amp_50:initial?.amp_50??false,amp_30:initial?.amp_30??false,amp_20:initial?.amp_20??false,
     dump_station:initial?.dump_station||'',generator_rules:initial?.generator_rules||'',
     wifi_available:initial?.wifi_available??false,wifi_rating:initial?.wifi_rating??null,
-    cell_verizon_rating:initial?.cell_verizon_rating??null,cell_att_rating:initial?.cell_att_rating??null,
-    cell_tmobile_rating:initial?.cell_tmobile_rating??null,cell_other_rating:initial?.cell_other_rating??null,
+    cell_verizon_active:initial?.cell_verizon_active??false,cell_verizon_rating:initial?.cell_verizon_rating??null,
+    cell_att_active:initial?.cell_att_active??false,cell_att_rating:initial?.cell_att_rating??null,
+    cell_tmobile_active:initial?.cell_tmobile_active??false,cell_tmobile_rating:initial?.cell_tmobile_rating??null,
+    cell_other_active:initial?.cell_other_active??false,cell_other_rating:initial?.cell_other_rating??null,cell_other_name:initial?.cell_other_name||'',
     connectivity_notes:initial?.connectivity_notes||''
   }
-  return sectionWrap('⚡','Utilities & Connectivity',
+  return sectionWrap('','Utilities & Connectivity',
     (container, done) => {
       const toggleState = {...data}
       const toggleBtns = {}
@@ -1478,62 +1480,92 @@ function utilitiesSection(stopId, initial) {
       container.appendChild(el('div',{style:'height:10px'}))
       container.appendChild(field('Dump Station',dumpI))
       container.appendChild(field('Generator Rules',genI))
+
+      // Wi-Fi — rating only shows when toggled on
       container.appendChild(el('div',{cls:'lbl',txt:'Wi-Fi',style:'margin:10px 0 8px'}))
-      const wifiWrap=div('toggles-wrap'); wifiWrap.appendChild(mkToggle('wifi_available','Wi-Fi Available'))
-      container.appendChild(wifiWrap)
       let wifiRating=data.wifi_rating
-      const wifiRatingWrap=div('',{style:'margin-top:8px'})
-      wifiRatingWrap.appendChild(el('div',{cls:'lbl',txt:'Wi-Fi Rating',style:'margin-bottom:4px'}))
-      wifiRatingWrap.appendChild(starRating(wifiRating,v=>{wifiRating=v},'sm'))
-      container.appendChild(wifiRatingWrap)
-      container.appendChild(el('div',{cls:'lbl',txt:'Cell Signal',style:'margin:10px 0 8px'}))
+      const wifiRatingSlot = div('',{style:'margin-top:8px;display:none'})
+      wifiRatingSlot.appendChild(el('div',{cls:'lbl',txt:'Wi-Fi Rating',style:'margin-bottom:4px'}))
+      wifiRatingSlot.appendChild(starRating(wifiRating,v=>{wifiRating=v},'sm'))
+      const wifiToggle = el('button',{cls:`toggle-btn${toggleState.wifi_available?' on':''}`,txt:'Wi-Fi Available',onclick:()=>{
+        toggleState.wifi_available=!toggleState.wifi_available
+        wifiToggle.classList.toggle('on',toggleState.wifi_available)
+        wifiRatingSlot.style.display = toggleState.wifi_available ? '' : 'none'
+      }})
+      if (toggleState.wifi_available) wifiRatingSlot.style.display=''
+      const wifiWrap=div('toggles-wrap'); wifiWrap.appendChild(wifiToggle)
+      container.appendChild(wifiWrap)
+      container.appendChild(wifiRatingSlot)
+
+      // Cell carriers — each tappable, rating only shows when that carrier is active
+      container.appendChild(el('div',{cls:'lbl',txt:'Cell Signal',style:'margin:14px 0 8px'}))
       let vzRating=data.cell_verizon_rating, atRating=data.cell_att_rating, tmRating=data.cell_tmobile_rating, otRating=data.cell_other_rating
-      function cellRatingRow(label, val, setter) {
-        const w = div('',{style:'margin-bottom:10px'})
-        w.appendChild(el('div',{cls:'lbl',txt:label,style:'margin-bottom:4px'}))
-        w.appendChild(starRating(val, setter, 'sm'))
-        return w
+      let otName = data.cell_other_name
+
+      function carrierRow(key, label, val, setter, extraEl) {
+        const wrap = div('',{style:'margin-bottom:10px'})
+        const ratingSlot = div('',{style:'margin-top:8px;display:none'})
+        ratingSlot.appendChild(starRating(val, setter, 'sm'))
+        if (extraEl) ratingSlot.appendChild(extraEl)
+        const carrierBtn = el('button',{cls:`toggle-btn${toggleState[key]?' on':''}`,txt:label,onclick:()=>{
+          toggleState[key]=!toggleState[key]
+          carrierBtn.classList.toggle('on',toggleState[key])
+          ratingSlot.style.display = toggleState[key] ? '' : 'none'
+        }})
+        if (toggleState[key]) ratingSlot.style.display=''
+        const tw=div('toggles-wrap'); tw.appendChild(carrierBtn)
+        wrap.appendChild(tw); wrap.appendChild(ratingSlot)
+        return wrap
       }
-      container.appendChild(cellRatingRow('Verizon', vzRating, v=>vzRating=v))
-      container.appendChild(cellRatingRow('AT&T', atRating, v=>atRating=v))
-      container.appendChild(cellRatingRow('T-Mobile', tmRating, v=>tmRating=v))
-      container.appendChild(cellRatingRow('Other Provider', otRating, v=>otRating=v))
+
+      const otherNameI = textInput('Carrier name', otName)
+      otherNameI.style.marginTop='8px'
+      otherNameI.oninput = e => otName = e.target.value
+
+      container.appendChild(carrierRow('cell_verizon_active','Verizon', vzRating, v=>vzRating=v))
+      container.appendChild(carrierRow('cell_att_active','AT&T', atRating, v=>atRating=v))
+      container.appendChild(carrierRow('cell_tmobile_active','T-Mobile', tmRating, v=>tmRating=v))
+      container.appendChild(carrierRow('cell_other_active','Other', otRating, v=>otRating=v, otherNameI))
+
       const connI=textareaInput('',data.connectivity_notes,2)
+      container.appendChild(el('div',{style:'height:6px'}))
       container.appendChild(field('Connectivity Notes',connI))
       container.appendChild(div('btn-row',{style:'margin-top:12px'},
         btn('Cancel','gho',done),
         btn('Save','pri',async()=>{
-          const saveData={...toggleState,dump_station:dumpI.value,generator_rules:genI.value,wifi_rating:wifiRating,cell_verizon_rating:vzRating,cell_att_rating:atRating,cell_tmobile_rating:tmRating,cell_other_rating:otRating,connectivity_notes:connI.value}
+          const saveData={...toggleState,dump_station:dumpI.value,generator_rules:genI.value,wifi_rating:wifiRating,
+            cell_verizon_rating:vzRating,cell_att_rating:atRating,cell_tmobile_rating:tmRating,
+            cell_other_rating:otRating,cell_other_name:otName,connectivity_notes:connI.value}
           Object.assign(data,saveData)
-                    await getSB().from('stop_utilities').upsert({stop_id:stopId,...saveData},{onConflict:'stop_id'})
-          ; toast('Saved'); done()
+          await getSB().from('stop_utilities').upsert({stop_id:stopId,...saveData},{onConflict:'stop_id'})
+          toast('Saved'); done()
         })
       ))
     },
     container => {
       const hookups=[data.full_hookup&&'Full Hookup',data.has_water&&'Water',data.has_electric&&'Electric',data.has_sewer&&'Sewer',data.dry_camping&&'Dry Camping'].filter(Boolean)
       const amps=[data.amp_50&&'50 Amp',data.amp_30&&'30 Amp',data.amp_20&&'20 Amp'].filter(Boolean)
-      const hasContent=hookups.length||amps.length||data.dump_station||data.generator_rules||data.wifi_available||data.cell_verizon_rating||data.cell_att_rating||data.cell_tmobile_rating||data.cell_other_rating||data.connectivity_notes
+      const hasContent=hookups.length||amps.length||data.dump_station||data.generator_rules||data.wifi_available||data.cell_verizon_active||data.cell_att_active||data.cell_tmobile_active||data.cell_other_active||data.connectivity_notes
       if(!hasContent){container.appendChild(el('p',{cls:'empty-msg',txt:'No utilities info yet.'}));return}
       if(hookups.length){const d2=div('read-row');d2.appendChild(el('div',{cls:'read-lbl',txt:'Hookups'}));const tw=div('toggles-wrap');for(const h of hookups)tw.appendChild(chip(h));d2.appendChild(tw);container.appendChild(d2)}
       if(amps.length){const d2=div('read-row');d2.appendChild(el('div',{cls:'read-lbl',txt:'Electrical'}));const tw=div('toggles-wrap');for(const a of amps)tw.appendChild(chip(a));d2.appendChild(tw);container.appendChild(d2)}
       const r1=readRow('Dump Station',data.dump_station);if(r1)container.appendChild(r1)
       const r2=readRow('Generator Rules',data.generator_rules);if(r2)container.appendChild(r2)
       if(data.wifi_available){const d2=div('read-row');d2.appendChild(el('div',{cls:'read-lbl',txt:'Wi-Fi'}));const tw=div('toggles-wrap');tw.appendChild(chip('Available'));if(data.wifi_rating)tw.appendChild(el('span',{txt:'★'.repeat(data.wifi_rating)+'☆'.repeat(5-data.wifi_rating),style:'font-size:14px;color:#f59e0b'}));d2.appendChild(tw);container.appendChild(d2)}
-      if(data.cell_verizon_rating||data.cell_att_rating||data.cell_tmobile_rating||data.cell_other_rating){
+      if(data.cell_verizon_active||data.cell_att_active||data.cell_tmobile_active||data.cell_other_active){
         container.appendChild(el('div',{cls:'read-lbl',txt:'Cell Signal',style:'margin-bottom:6px'}))
-        function cellReadRow(label, val) {
-          if (!val) return null
+        function cellReadRow(label, active, val) {
+          if (!active) return null
           const d2 = div('read-row')
           d2.appendChild(el('div',{cls:'read-lbl',txt:label}))
-          d2.appendChild(el('span',{txt:'★'.repeat(val)+'☆'.repeat(5-val),style:'font-size:14px;color:#f59e0b'}))
+          d2.appendChild(el('span',{txt: val ? '★'.repeat(val)+'☆'.repeat(5-val) : 'No rating',style:'font-size:14px;color:#f59e0b'}))
           return d2
         }
         const g=div('read-grid')
-        const rc=cellReadRow('Verizon',data.cell_verizon_rating);if(rc)g.appendChild(rc)
-        const rc2=cellReadRow('AT&T',data.cell_att_rating);if(rc2)g.appendChild(rc2)
-        const rc3=cellReadRow('T-Mobile',data.cell_tmobile_rating);if(rc3)g.appendChild(rc3)
-        const rc4=cellReadRow('Other',data.cell_other_rating);if(rc4)g.appendChild(rc4)
+        const rc=cellReadRow('Verizon',data.cell_verizon_active,data.cell_verizon_rating);if(rc)g.appendChild(rc)
+        const rc2=cellReadRow('AT&T',data.cell_att_active,data.cell_att_rating);if(rc2)g.appendChild(rc2)
+        const rc3=cellReadRow('T-Mobile',data.cell_tmobile_active,data.cell_tmobile_rating);if(rc3)g.appendChild(rc3)
+        const rc4=cellReadRow(data.cell_other_name||'Other',data.cell_other_active,data.cell_other_rating);if(rc4)g.appendChild(rc4)
         container.appendChild(g)
       }
       const r3=readRow('Connectivity Notes',data.connectivity_notes);if(r3)container.appendChild(r3)
@@ -1542,10 +1574,10 @@ function utilitiesSection(stopId, initial) {
 }
 
 function facilitiesSection(stopId, initial) {
-  const AMENITIES=[['has_pool','🏊 Pool'],['has_hot_tub','♨️ Hot Tub'],['has_lodge','🏠 Lodge'],['has_adult_center','🎯 Adult Center'],['has_laundry','🧺 Laundry'],['has_propane','⛽ Propane'],['has_firewood','🪵 Firewood'],['has_restaurant','🍽️ Restaurant'],['has_dog_park','🐕 Dog Park'],['has_fitness','💪 Fitness'],['has_hiking','🥾 Hiking'],['has_kayaking','🛶 Kayaking'],['has_fishing','🎣 Fishing'],['has_mini_golf','⛳ Mini Golf'],['has_shuffleboard','🏒 Shuffleboard'],['has_pickleball','🏓 Pickleball']]
+  const AMENITIES=[['has_pool','Pool'],['has_hot_tub','Hot Tub'],['has_lodge','Lodge'],['has_adult_center','Adult Center'],['has_laundry','Laundry'],['has_propane','Propane'],['has_firewood','Firewood'],['has_restaurant','Restaurant'],['has_dog_park','Dog Park'],['has_fitness','Fitness'],['has_hiking','Hiking'],['has_kayaking','Kayaking'],['has_fishing','Fishing'],['has_mini_golf','Mini Golf'],['has_shuffleboard','Shuffleboard'],['has_pickleball','Pickleball']]
   let data={flush_toilets:initial?.flush_toilets??false,vault_toilets:initial?.vault_toilets??false,showers_free:initial?.showers_free??false,showers_paid:initial?.showers_paid??false,bathhouse_cleanliness:initial?.bathhouse_cleanliness??null,bathhouse_notes:initial?.bathhouse_notes||'',amenity_notes:initial?.amenity_notes||''}
   for(const[k]of AMENITIES)data[k]=initial?.[k]??false
-  return sectionWrap('🏛️','Facilities & Amenities',
+  return sectionWrap('','Facilities & Amenities',
     (container,done)=>{
       const ts={...data}; const tBtns={}
       function mkT(k,l){const b=el('button',{cls:`toggle-btn${ts[k]?' on':''}`,txt:l,onclick:()=>{ts[k]=!ts[k];b.classList.toggle('on',ts[k])}});tBtns[k]=b;return b}
@@ -1590,7 +1622,7 @@ function facilitiesSection(stopId, initial) {
 
 function localSection(stopId, initial) {
   let data={weather:initial?.weather||'',nearby_sightseeing:initial?.nearby_sightseeing||'',nearby_restaurants:initial?.nearby_restaurants||'',grocery_distance:initial?.grocery_distance||'',places_visited:initial?.places_visited||'',visit_next_time:initial?.visit_next_time||'',local_notes:initial?.local_notes||''}
-  return sectionWrap('🌲','Local Area',
+  return sectionWrap('','Local Area',
     (container,done)=>{
       const wI=textInput('Sunny, 75°F, slight breeze...',data.weather)
       const nsI=textareaInput('Parks, attractions, landmarks...',data.nearby_sightseeing,2)
@@ -1626,7 +1658,7 @@ function localSection(stopId, initial) {
 
 function travelSection(stopId, initial) {
   let data={cost:initial?.cost||'',miles_traveled:initial?.miles_traveled||'',travel_time:initial?.travel_time||'',travel_notes:initial?.travel_notes||'',how_found:initial?.how_found||'',management_notes:initial?.management_notes||'',scenery_notes:initial?.scenery_notes||'',parking_notes:initial?.parking_notes||'',road_notes:initial?.road_notes||''}
-  return sectionWrap('🧭','Travel Information',
+  return sectionWrap('','Travel Information',
     (container,done)=>{
       const cI=textInput('$45/night',data.cost)
       const mI=textInput('247',data.miles_traveled)
@@ -1670,37 +1702,48 @@ async function renderVehicles() {
 
   // Skeleton while loading
   const skelWrap = div('')
-  for (let i=0;i<2;i++){ const s=div('skeleton'); s.style.cssText='height:76px;margin-bottom:10px;border-radius:14px'; skelWrap.appendChild(s) }
+  for (let i=0;i<2;i++){ const s=div('skeleton'); s.style.cssText='height:180px;margin-bottom:12px;border-radius:16px'; skelWrap.appendChild(s) }
   c.appendChild(skelWrap)
 
   const [{data:camper},{data:vehicle}] = await Promise.all([
-    getSB().from('vehicles').select('name,photo_path').eq('vehicle_type','camper').maybeSingle(),
-    getSB().from('vehicles').select('name,photo_path').eq('vehicle_type','vehicle').maybeSingle()
+    getSB().from('vehicles').select('name,photo_path,license_plate,vin').eq('vehicle_type','camper').maybeSingle(),
+    getSB().from('vehicles').select('name,photo_path,license_plate,vin').eq('vehicle_type','vehicle').maybeSingle()
   ])
 
   skelWrap.remove()
 
   const cards = [
-    {fallbackIcon:'🚌', title: camper?.name || 'Camper / RV', sub:'Specs, registration, leveling & more', photoPath: camper?.photo_path, fn:openCamper},
-    {fallbackIcon:'🛻', title: vehicle?.name || 'Other Vehicle', sub:'Truck, SUV or car details', photoPath: vehicle?.photo_path, fn:openVehicle},
+    {title: camper?.name || 'Camper / RV', sub:'Specs, registration, leveling & more', photoPath: camper?.photo_path, plate: camper?.license_plate, vin: camper?.vin, fn:openCamper},
+    {title: vehicle?.name || 'Other Vehicle', sub:'Truck, SUV or car details', photoPath: vehicle?.photo_path, plate: vehicle?.license_plate, vin: vehicle?.vin, fn:openVehicle},
   ]
   for(const card of cards) {
     const c2 = div('card card-tap')
-    const body = div('card-body', {style:'display:flex;align-items:center;gap:14px'})
+    c2.style.cssText = 'position:relative;height:180px;padding:0;border:1.5px solid var(--gray-200)'
+
     if (card.photoPath) {
       const {data} = getSB().storage.from('photos').getPublicUrl(card.photoPath)
-      const thumb = div('',{style:'width:48px;height:48px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--gray-100)'})
-      thumb.appendChild(el('img',{src:data.publicUrl,style:'width:100%;height:100%;object-fit:cover;display:block'}))
-      body.appendChild(thumb)
+      const bg = el('img',{src:data.publicUrl,style:'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block'})
+      c2.appendChild(bg)
+      const overlay = div('',{style:'position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.75) 0%,rgba(0,0,0,.15) 55%,transparent 100%)'})
+      c2.appendChild(overlay)
     } else {
-      body.appendChild(el('div',{txt:card.fallbackIcon,style:'font-size:32px;flex-shrink:0'}))
+      c2.style.background = 'linear-gradient(135deg,var(--gray-100),var(--gray-200))'
     }
-    const info = div('')
-    info.appendChild(el('div',{txt:card.title,style:'font-size:15px;font-weight:700;color:var(--gray-900)'}))
-    info.appendChild(el('div',{txt:card.sub,style:'font-size:12px;color:var(--gray-500);margin-top:2px'}))
-    body.appendChild(info)
-    body.appendChild(el('span',{txt:'›',style:'color:var(--gray-400);font-size:22px;margin-left:auto'}))
-    c2.appendChild(body)
+
+    const textColor = card.photoPath ? '#fff' : 'var(--gray-900)'
+    const subColor = card.photoPath ? 'rgba(255,255,255,.75)' : 'var(--gray-500)'
+
+    const content = div('',{style:'position:absolute;left:16px;right:16px;bottom:14px'})
+    content.appendChild(el('div',{txt:card.title,style:`font-size:19px;font-weight:800;color:${textColor};margin-bottom:4px`}))
+    const metaParts = []
+    if (card.plate) metaParts.push(`Plate: ${card.plate}`)
+    if (card.vin) metaParts.push(`VIN: ${card.vin}`)
+    if (metaParts.length) {
+      content.appendChild(el('div',{txt:metaParts.join('  •  '),style:`font-size:12px;color:${subColor};font-weight:600;margin-bottom:2px`}))
+    }
+    content.appendChild(el('div',{txt:card.sub,style:`font-size:12px;color:${subColor}`}))
+    c2.appendChild(content)
+
     c2.onclick = card.fn
     c.appendChild(c2)
   }
@@ -1709,7 +1752,7 @@ async function renderVehicles() {
 async function openCamper() { await openVehiclePage('camper','camper-page','camper-content','Camper / RV') }
 async function openVehicle() { await openVehiclePage('vehicle','vehicle-page','vehicle-content','Other Vehicle') }
 
-const MAINTENANCE_TYPES=[{value:'oil_change',label:'🔧 Oil Change'},{value:'tire_rotation',label:'🔄 Tire Rotation'},{value:'inspection',label:'🔍 Inspection'},{value:'repair',label:'🛠️ Repair'},{value:'other',label:'📝 Other'}]
+const MAINTENANCE_TYPES=[{value:'oil_change',label:'Oil Change'},{value:'tire_rotation',label:'Tire Rotation'},{value:'inspection',label:'Inspection'},{value:'repair',label:'Repair'},{value:'other',label:'Other'}]
 const CAMPER_TYPES=[{value:'Class A',label:'Class A'},{value:'Class B',label:'Class B'},{value:'Class C',label:'Class C'},{value:'Fifth Wheel',label:'Fifth Wheel'},{value:'Travel Trailer',label:'Travel Trailer'},{value:'Pop-Up',label:'Pop-Up'},{value:'Toy Hauler',label:'Toy Hauler'},{value:'Other',label:'Other'}]
 const HITCH_TYPES=[{value:'5th Wheel',label:'5th Wheel'},{value:'Gooseneck',label:'Gooseneck'},{value:'Conventional Ball',label:'Conventional Ball'},{value:'None',label:'None'}]
 const HITCH_SIZES=[{value:'1¼"',label:'1¼"'},{value:'2"',label:'2"'},{value:'2½"',label:'2½"'}]
@@ -1748,7 +1791,7 @@ async function openVehiclePage(type, pageId, contentId, title) {
     hb.appendChild(backBtn('Vehicles',()=>switchTab('vehicles')))
     hero.appendChild(hb)
     const changeLabel = el('label',{style:'position:absolute;bottom:14px;right:14px;background:rgba(255,255,255,.9);border-radius:10px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer'})
-    changeLabel.textContent='📷 Change Photo'
+    changeLabel.textContent='Change Photo'
     const fileI=el('input',{type:'file',accept:'image/*',style:'display:none'})
     fileI.onchange=e=>handleVehiclePhoto(e,type,vehicle?.id,pageId,contentId,title)
     changeLabel.appendChild(fileI)
@@ -1758,7 +1801,7 @@ async function openVehiclePage(type, pageId, contentId, title) {
     const topBar = div('',{style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:8px'})
     topBar.appendChild(backBtn('Vehicles',()=>switchTab('vehicles')))
     const addPhotoLabel = el('label',{cls:'btn sec sm'})
-    addPhotoLabel.textContent='📷 Add Photo'
+    addPhotoLabel.textContent='Add Photo'
     const fileI=el('input',{type:'file',accept:'image/*',style:'display:none'})
     fileI.onchange=e=>handleVehiclePhoto(e,type,vehicle?.id,pageId,contentId,title)
     addPhotoLabel.appendChild(fileI); topBar.appendChild(addPhotoLabel)
@@ -1772,7 +1815,7 @@ async function openVehiclePage(type, pageId, contentId, title) {
   const isCamper = type==='camper'
 
   // General Info
-  c.appendChild(collapsible('ℹ️','General Info', vehicleEditSection(
+  c.appendChild(collapsible('','General Info', vehicleEditSection(
     isCamper
       ? [['Name','name','text'],['Manufacturer','manufacturer','text'],['Make / Model','make_model','text'],null,['VIN','vin','text'],['License Plate','license_plate','text'],['Color','color','text'],['Purchased Date','purchased_date','date']]
       : [['Name','name','text'],['Make / Model','make_model','text'],['Color','color','text'],['VIN','vin','text'],['License Plate','license_plate','text'],['Purchased Date','purchased_date','date']],
@@ -1781,50 +1824,50 @@ async function openVehiclePage(type, pageId, contentId, title) {
   ), true))
 
   // Registration
-  c.appendChild(collapsible('📋','Registration & Inspection', vehicleEditSection(
+  c.appendChild(collapsible('','Registration & Inspection', vehicleEditSection(
     [['Registration Number','registration_number','text'],['Registration Expires','registration_expires','date'],['Inspection Expires','inspection_expires','date']],
     form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')}
   )))
 
   if (isCamper) {
     // Specifications
-    c.appendChild(collapsible('📐','Specifications', vehicleEditSection(
+    c.appendChild(collapsible('','Specifications', vehicleEditSection(
       [['Weight','weight','text'],['Length','length','text'],['Folded Length','folded_length','text'],['Max Height','max_height','text'],['Folded Height','folded_height','text'],['# of Tires','num_tires','number'],['Front Tire PSI','front_tire_pressure','text'],['Rear Tire PSI','rear_tire_pressure','text'],['Tag Axle PSI','tag_axle_tire_pressure','text'],['Slide-Out Count','slide_out_count','number'],['Propane Tank','propane_tank','text'],['Fresh Water','fresh_water_capacity','text'],['Grey Water','grey_water_capacity','text'],['Black Water','black_water_capacity','text']],
       form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')},
       [['Hitch Type','hitch_type','select',HITCH_TYPES]]
     )))
-    c.appendChild(collapsible('⚖️','Leveling', vehicleEditSection(
+    c.appendChild(collapsible('','Leveling', vehicleEditSection(
       [['Side-to-Side','side_to_side_leveling','text'],['Front-to-Back','front_to_back_leveling','text']],
       form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')}
     )))
-    c.appendChild(collapsible('⚙️','Engine & Generator', vehicleEditSection(
+    c.appendChild(collapsible('','Engine & Generator', vehicleEditSection(
       [['Engine Serial Number','engine_serial','text'],['Generator Make / Model','generator_make_model','text'],['Generator Serial Number','generator_serial','text']],
       form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')}
     )))
   } else {
     // Vehicle-specific fields
-    c.appendChild(collapsible('📐','Specifications', vehicleEditSection(
+    c.appendChild(collapsible('','Specifications', vehicleEditSection(
       [['Towing Capacity','towing_capacity','text'],['GCWR','gcwr','text'],['Front Tire PSI','front_tire_pressure','text'],['Rear Tire PSI','rear_tire_pressure','text'],['# of Tires','num_tires','number']],
       form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')},
       [['Hitch Receiver Size','hitch_receiver_size','select',HITCH_SIZES]]
     )))
   }
 
-  c.appendChild(collapsible('📞','Contact Info', vehicleEditSection(
+  c.appendChild(collapsible('','Contact Info', vehicleEditSection(
     [['Dealer Contact','dealer_contact','textarea'],['Service Contact','service_contact','textarea'],['Manufacturer Contact','manufacturer_contact','textarea'],['Roadside Assistance','roadside_assistance','textarea']],
     form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')}
   )))
-  c.appendChild(collapsible('🚨','Emergency Info', vehicleEditSection(
+  c.appendChild(collapsible('','Emergency Info', vehicleEditSection(
     [['Insurance Policy Info','insurance_policy','textarea'],['Tire Replacement Type','tire_replacement','text'],['Tag Axle Tire Type','tag_axle_tire_replacement','text']],
     form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')}
   )))
-  c.appendChild(collapsible('📝','Notes', vehicleEditSection(
+  c.appendChild(collapsible('','Notes', vehicleEditSection(
     [['Notes','notes','textarea']],
     form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')}
   )))
 
   // Maintenance Log
-  c.appendChild(collapsible('🔧','Maintenance Log', maintenanceSection(vehicle?.id, type, logs, async()=>{
+  c.appendChild(collapsible('','Maintenance Log', maintenanceSection(vehicle?.id, type, logs, async()=>{
     const {data:v}=await getSB().from('vehicles').select('id').eq('vehicle_type',type).maybeSingle()
     if(!v) return []
     const {data}=await getSB().from('maintenance_logs').select('*').eq('vehicle_id',v.id).order('date',{ascending:false})
@@ -1949,8 +1992,8 @@ function maintenanceSection(vehicleId, vehicleType, initialLogs, reloadFn) {
       entry.appendChild(topRow2)
       if(log.description)entry.appendChild(el('p',{cls:'maint-desc',txt:log.description}))
       const meta=div('maint-meta')
-      if(log.mileage)meta.appendChild(el('span',{txt:'📍 '+log.mileage}))
-      if(log.cost)meta.appendChild(el('span',{txt:'💰 '+log.cost}))
+      if(log.mileage)meta.appendChild(el('span',{txt:''+log.mileage}))
+      if(log.cost)meta.appendChild(el('span',{txt:''+log.cost}))
       if(meta.children.length)entry.appendChild(meta)
       if(log.notes)entry.appendChild(el('p',{style:'font-size:12px;color:var(--gray-400);font-style:italic;margin-top:4px',txt:log.notes}))
       wrap.appendChild(entry)
@@ -2053,7 +2096,7 @@ function renderSettings() {
   const delConfirmI=textInput('DELETE','')
   const delMsg=div('',{style:'display:none'})
   const warning=div('',{style:'background:#fee2e2;border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px;color:#991b1b'})
-  warning.innerHTML='<strong>⚠️ This will permanently delete:</strong><ul style="margin:6px 0 0 16px"><li>All your trips</li><li>All your stops and notes</li><li>All your photos</li><li>Your account</li></ul><p style="margin-top:6px"><strong>This cannot be undone.</strong></p>'
+  warning.innerHTML='<strong>This will permanently delete:</strong><ul style="margin:6px 0 0 16px"><li>All your trips</li><li>All your stops and notes</li><li>All your photos</li><li>Your account</li></ul><p style="margin-top:6px"><strong>This cannot be undone.</strong></p>'
   delExpand.appendChild(warning)
   delExpand.appendChild(field('Type DELETE to confirm',delConfirmI))
   delExpand.appendChild(delMsg)
@@ -2083,21 +2126,21 @@ function renderSettings() {
   }
 
   c.appendChild(settingsCard([
-    mkRow('👤','Change Name','#EEF2FB','',null,nameExpand), nameExpand,
+    mkRow('','Change Name','#EEF2FB','',null,nameExpand), nameExpand,
   ]))
   c.appendChild(settingsCard([
-    mkRow('🔒','Change Password','#F5F3FF','',null,pwExpand), pwExpand,
+    mkRow('','Change Password','#F5F3FF','',null,pwExpand), pwExpand,
   ]))
   c.appendChild(settingsCard([
-    mkRow('💬','Send Feedback','#EFF6FF','',()=>{openFeedback()})
+    mkRow('','Send Feedback','#EFF6FF','',()=>{openFeedback()})
   ]))
   c.appendChild(settingsCard([
-    mkRow('🚪','Sign Out','var(--gray-100)','',async()=>{
+    mkRow('','Sign Out','var(--gray-100)','',async()=>{
       await getSB().auth.signOut(); currentUser=null; showAuth()
     })
   ]))
   c.appendChild(settingsCard([
-    mkRow('🗑','Delete Account','var(--red-lt)','var(--red)',null,delExpand), delExpand
+    mkRow('','Delete Account','var(--red-lt)','var(--red)',null,delExpand), delExpand
   ]))
 
   c.appendChild(el('p',{txt:'My RV Journal • Version 1.09b',style:'text-align:center;font-size:12px;color:var(--gray-400);margin-top:24px'}))
@@ -2118,10 +2161,10 @@ function openFeedback() {
   c.appendChild(backBtn('Settings',()=>switchTab('settings')))
   c.appendChild(el('h1',{txt:'Send Feedback',style:'font-size:22px;font-weight:800;margin-bottom:4px'}))
   c.appendChild(el('p',{txt:"Bug reports, suggestions, or anything on your mind — we'd love to hear it.",style:'font-size:14px;color:var(--gray-500);margin-bottom:20px'}))
-  const catSel=selectInput([{value:'bug',label:'🐛 Bug Report'},{value:'suggestion',label:'💡 Suggestion'},{value:'general',label:'💬 General Feedback'},{value:'other',label:'📝 Other'}],'')
+  const catSel=selectInput([{value:'bug',label:'Bug Report'},{value:'suggestion',label:'Suggestion'},{value:'general',label:'General Feedback'},{value:'other',label:'Other'}],'')
   const msgI=textareaInput("Describe your feedback in as much detail as you'd like...",'',6)
   const errEl=div('err-msg'); errEl.style.display='none'
-  const sendBtn=btn('📤 Send Feedback','pri full',async()=>{
+  const sendBtn=btn('Send Feedback','pri full',async()=>{
     errEl.style.display='none'
     if(!catSel.value){errEl.textContent='Please select a category.';errEl.style.display='';return}
     if(msgI.value.trim().length<10){errEl.textContent='Please provide a bit more detail.';errEl.style.display='';return}
