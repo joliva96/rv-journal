@@ -347,9 +347,9 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       </div>
     </div>
     <div class="nav-tabs">
-      <button class="nav-tab on" data-tab="home" onclick="switchTab('home')">Home</button>
-      <button class="nav-tab" data-tab="vehicles" onclick="switchTab('vehicles')">Vehicles</button>
-      <button class="nav-tab" data-tab="settings" onclick="switchTab('settings')">Settings</button>
+      <button class="nav-tab on" data-tab="home" onclick="switchTab('home')">🏠 Home</button>
+      <button class="nav-tab" data-tab="vehicles" onclick="switchTab('vehicles')">🚗 Vehicles</button>
+      <button class="nav-tab" data-tab="settings" onclick="switchTab('settings')">⚙️ Settings</button>
     </div>
   </div>
 
@@ -483,7 +483,7 @@ function fmtDateRange(start, end) {
 }
 
 function statusBadge(status) {
-  const icons = {planned:'',active:'',completed:'✓'}
+  const icons = {planned:'📋',active:'✈️',completed:'✓'}
   const b = el('span', {cls:`badge ${status}`, txt:`${icons[status]||''} ${status}`})
   return b
 }
@@ -728,7 +728,7 @@ async function renderHome() {
   const searchInput = el('input', {type:'text', placeholder:'Search trips and stops...'})
   searchInput.style.paddingLeft = '36px'
   const searchWrap = div('search-wrap')
-  searchWrap.appendChild(el('span', {cls:'search-icon', txt:''}))
+  searchWrap.appendChild(el('span', {cls:'search-icon', txt:'🔍'}))
   searchWrap.appendChild(searchInput)
   c.appendChild(searchWrap)
 
@@ -759,7 +759,7 @@ async function renderHome() {
       ])
       resultsEl.innerHTML = ''
       if (!tr.data?.length && !sr.data?.length) {
-        resultsEl.appendChild(emptyState('','No results',`Nothing matched "${search}"`))
+        resultsEl.appendChild(emptyState('🔍','No results',`Nothing matched "${search}"`))
         return
       }
       if (tr.data?.length) {
@@ -780,7 +780,7 @@ async function renderHome() {
   function sortAndRender(sort) {
     resultsEl.innerHTML = ''
     if (!allTrips.length) {
-      resultsEl.appendChild(emptyState('','No trips yet','Tap + to create your first trip'))
+      resultsEl.appendChild(emptyState('🗺️','No trips yet','Tap + to create your first trip'))
       return
     }
     const sorted = [...allTrips].sort((a,b) => {
@@ -949,7 +949,7 @@ async function openTrip(tripId) {
 
   // Delete trip
   c.appendChild(el('div',{style:'height:20px'}))
-  c.appendChild(btn('Delete Trip','dan full sm', async()=>{
+  c.appendChild(btn('🗑 Delete Trip','dan full sm', async()=>{
     if (!await confirm2('Delete trip?','All stops and data will be permanently deleted.')) return
     await getSB().from('trips').delete().eq('id',tripId)
     toast('Trip deleted'); switchTab('home')
@@ -1040,7 +1040,7 @@ function renderWizStep() {
       content.appendChild(prev)
     } else {
       const drop = div('photo-drop')
-      drop.innerHTML = '<div style="font-size:36px;margin-bottom:8px"></div><div style="font-size:14px;color:var(--gray-500)">Tap to choose a photo</div>'
+      drop.innerHTML = '<div style="font-size:36px;margin-bottom:8px">📷</div><div style="font-size:14px;color:var(--gray-500)">Tap to choose a photo</div>'
       const fileI = el('input',{type:'file',accept:'image/*',style:'display:none'})
       fileI.onchange = e => {
         const f=e.target.files[0]; if(!f) return
@@ -1060,7 +1060,7 @@ function renderWizStep() {
     content.appendChild(ta)
   }
   if (wizStep===6) {
-    const ic = div('',el('div',{style:'font-size:48px;margin-bottom:12px;text-align:center',txt:''}))
+    const ic = div('',el('div',{style:'font-size:48px;margin-bottom:12px;text-align:center',txt:'✅'}))
     content.appendChild(ic)
     content.appendChild(h("All set!"))
     content.appendChild(sub("You're checked in. You can add more details to this stop anytime."))
@@ -1267,7 +1267,7 @@ async function openStop(stopId) {
 
   // Delete
   c.appendChild(el('div',{style:'height:12px'}))
-  c.appendChild(btn('Delete Stop','dan full sm', async()=>{
+  c.appendChild(btn('🗑 Delete Stop','dan full sm', async()=>{
     if(!await confirm2('Delete stop?','All data for this stop will be permanently deleted.')) return
     const tripId=stop.trip_id
     await getSB().from('stops').delete().eq('id',stopId)
@@ -1327,7 +1327,7 @@ function journalSection(stopId, initial) {
     would_stay_again: initial?.would_stay_again||'',
     visit_next_time: initial?.visit_next_time||''
   }
-  return sectionWrap('','Personal Journal',
+  return sectionWrap('📔','Personal Journal',
     (container, done) => {
       const gnI=textareaInput('How was the stay?',data.general_notes,3)
       const fmI=textareaInput('What will you remember most?',data.favorite_memory,2)
@@ -1385,7 +1385,7 @@ function siteSection(stopId, initial) {
     has_fire_ring:initial?.has_fire_ring??false,has_picnic_table:initial?.has_picnic_table??false,has_grill:initial?.has_grill??false,
     wildlife_notes:initial?.wildlife_notes||'',site_notes:initial?.site_notes||''
   }
-  return sectionWrap('','Site Information',
+  return sectionWrap('📍','Site Information',
     (container, done) => {
       const snI=textInput('42',data.site_number)
       const tpI=selectInput([{value:'Back-In',label:'Back-In'},{value:'Pull-Thru',label:'Pull-Thru'}],data.back_in_pull_thru)
@@ -1459,7 +1459,7 @@ function utilitiesSection(stopId, initial) {
     cell_other_active:initial?.cell_other_active??false,cell_other_rating:initial?.cell_other_rating??null,cell_other_name:initial?.cell_other_name||'',
     connectivity_notes:initial?.connectivity_notes||''
   }
-  return sectionWrap('','Utilities & Connectivity',
+  return sectionWrap('⚡','Utilities & Connectivity',
     (container, done) => {
       const toggleState = {...data}
       const toggleBtns = {}
@@ -1574,10 +1574,10 @@ function utilitiesSection(stopId, initial) {
 }
 
 function facilitiesSection(stopId, initial) {
-  const AMENITIES=[['has_pool','Pool'],['has_hot_tub','Hot Tub'],['has_lodge','Lodge'],['has_adult_center','Adult Center'],['has_laundry','Laundry'],['has_propane','Propane'],['has_firewood','Firewood'],['has_restaurant','Restaurant'],['has_dog_park','Dog Park'],['has_fitness','Fitness'],['has_hiking','Hiking'],['has_kayaking','Kayaking'],['has_fishing','Fishing'],['has_mini_golf','Mini Golf'],['has_shuffleboard','Shuffleboard'],['has_pickleball','Pickleball']]
+  const AMENITIES=[['has_pool','🏊 Pool'],['has_hot_tub','♨️ Hot Tub'],['has_lodge','🏠 Lodge'],['has_adult_center','🎯 Adult Center'],['has_laundry','🧺 Laundry'],['has_propane','⛽ Propane'],['has_firewood','🪵 Firewood'],['has_restaurant','🍽️ Restaurant'],['has_dog_park','🐕 Dog Park'],['has_fitness','💪 Fitness'],['has_hiking','🥾 Hiking'],['has_kayaking','🛶 Kayaking'],['has_fishing','🎣 Fishing'],['has_mini_golf','⛳ Mini Golf'],['has_shuffleboard','🏒 Shuffleboard'],['has_pickleball','🏓 Pickleball']]
   let data={flush_toilets:initial?.flush_toilets??false,vault_toilets:initial?.vault_toilets??false,showers_free:initial?.showers_free??false,showers_paid:initial?.showers_paid??false,bathhouse_cleanliness:initial?.bathhouse_cleanliness??null,bathhouse_notes:initial?.bathhouse_notes||'',amenity_notes:initial?.amenity_notes||''}
   for(const[k]of AMENITIES)data[k]=initial?.[k]??false
-  return sectionWrap('','Facilities & Amenities',
+  return sectionWrap('🏛️','Facilities & Amenities',
     (container,done)=>{
       const ts={...data}; const tBtns={}
       function mkT(k,l){const b=el('button',{cls:`toggle-btn${ts[k]?' on':''}`,txt:l,onclick:()=>{ts[k]=!ts[k];b.classList.toggle('on',ts[k])}});tBtns[k]=b;return b}
@@ -1622,7 +1622,7 @@ function facilitiesSection(stopId, initial) {
 
 function localSection(stopId, initial) {
   let data={weather:initial?.weather||'',nearby_sightseeing:initial?.nearby_sightseeing||'',nearby_restaurants:initial?.nearby_restaurants||'',grocery_distance:initial?.grocery_distance||'',places_visited:initial?.places_visited||'',visit_next_time:initial?.visit_next_time||'',local_notes:initial?.local_notes||''}
-  return sectionWrap('','Local Area',
+  return sectionWrap('🌲','Local Area',
     (container,done)=>{
       const wI=textInput('Sunny, 75°F, slight breeze...',data.weather)
       const nsI=textareaInput('Parks, attractions, landmarks...',data.nearby_sightseeing,2)
@@ -1658,7 +1658,7 @@ function localSection(stopId, initial) {
 
 function travelSection(stopId, initial) {
   let data={cost:initial?.cost||'',miles_traveled:initial?.miles_traveled||'',travel_time:initial?.travel_time||'',travel_notes:initial?.travel_notes||'',how_found:initial?.how_found||'',management_notes:initial?.management_notes||'',scenery_notes:initial?.scenery_notes||'',parking_notes:initial?.parking_notes||'',road_notes:initial?.road_notes||''}
-  return sectionWrap('','Travel Information',
+  return sectionWrap('🧭','Travel Information',
     (container,done)=>{
       const cI=textInput('$45/night',data.cost)
       const mI=textInput('247',data.miles_traveled)
@@ -1752,7 +1752,7 @@ async function renderVehicles() {
 async function openCamper() { await openVehiclePage('camper','camper-page','camper-content','Camper / RV') }
 async function openVehicle() { await openVehiclePage('vehicle','vehicle-page','vehicle-content','Other Vehicle') }
 
-const MAINTENANCE_TYPES=[{value:'oil_change',label:'Oil Change'},{value:'tire_rotation',label:'Tire Rotation'},{value:'inspection',label:'Inspection'},{value:'repair',label:'Repair'},{value:'other',label:'Other'}]
+const MAINTENANCE_TYPES=[{value:'oil_change',label:'🔧 Oil Change'},{value:'tire_rotation',label:'🔄 Tire Rotation'},{value:'inspection',label:'🔍 Inspection'},{value:'repair',label:'🛠️ Repair'},{value:'other',label:'📝 Other'}]
 const CAMPER_TYPES=[{value:'Class A',label:'Class A'},{value:'Class B',label:'Class B'},{value:'Class C',label:'Class C'},{value:'Fifth Wheel',label:'Fifth Wheel'},{value:'Travel Trailer',label:'Travel Trailer'},{value:'Pop-Up',label:'Pop-Up'},{value:'Toy Hauler',label:'Toy Hauler'},{value:'Other',label:'Other'}]
 const HITCH_TYPES=[{value:'5th Wheel',label:'5th Wheel'},{value:'Gooseneck',label:'Gooseneck'},{value:'Conventional Ball',label:'Conventional Ball'},{value:'None',label:'None'}]
 const HITCH_SIZES=[{value:'1¼"',label:'1¼"'},{value:'2"',label:'2"'},{value:'2½"',label:'2½"'}]
@@ -1791,7 +1791,7 @@ async function openVehiclePage(type, pageId, contentId, title) {
     hb.appendChild(backBtn('Vehicles',()=>switchTab('vehicles')))
     hero.appendChild(hb)
     const changeLabel = el('label',{style:'position:absolute;bottom:14px;right:14px;background:rgba(255,255,255,.9);border-radius:10px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer'})
-    changeLabel.textContent='Change Photo'
+    changeLabel.textContent='📷 Change Photo'
     const fileI=el('input',{type:'file',accept:'image/*',style:'display:none'})
     fileI.onchange=e=>handleVehiclePhoto(e,type,vehicle?.id,pageId,contentId,title)
     changeLabel.appendChild(fileI)
@@ -1801,7 +1801,7 @@ async function openVehiclePage(type, pageId, contentId, title) {
     const topBar = div('',{style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:8px'})
     topBar.appendChild(backBtn('Vehicles',()=>switchTab('vehicles')))
     const addPhotoLabel = el('label',{cls:'btn sec sm'})
-    addPhotoLabel.textContent='Add Photo'
+    addPhotoLabel.textContent='📷 Add Photo'
     const fileI=el('input',{type:'file',accept:'image/*',style:'display:none'})
     fileI.onchange=e=>handleVehiclePhoto(e,type,vehicle?.id,pageId,contentId,title)
     addPhotoLabel.appendChild(fileI); topBar.appendChild(addPhotoLabel)
@@ -1815,7 +1815,7 @@ async function openVehiclePage(type, pageId, contentId, title) {
   const isCamper = type==='camper'
 
   // General Info
-  c.appendChild(collapsible('','General Info', vehicleEditSection(
+  c.appendChild(collapsible('ℹ️','General Info', vehicleEditSection(
     isCamper
       ? [['Name','name','text'],['Manufacturer','manufacturer','text'],['Make / Model','make_model','text'],null,['VIN','vin','text'],['License Plate','license_plate','text'],['Color','color','text'],['Purchased Date','purchased_date','date']]
       : [['Name','name','text'],['Make / Model','make_model','text'],['Color','color','text'],['VIN','vin','text'],['License Plate','license_plate','text'],['Purchased Date','purchased_date','date']],
@@ -1824,50 +1824,50 @@ async function openVehiclePage(type, pageId, contentId, title) {
   ), true))
 
   // Registration
-  c.appendChild(collapsible('','Registration & Inspection', vehicleEditSection(
+  c.appendChild(collapsible('📋','Registration & Inspection', vehicleEditSection(
     [['Registration Number','registration_number','text'],['Registration Expires','registration_expires','date'],['Inspection Expires','inspection_expires','date']],
     form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')}
   )))
 
   if (isCamper) {
     // Specifications
-    c.appendChild(collapsible('','Specifications', vehicleEditSection(
+    c.appendChild(collapsible('📐','Specifications', vehicleEditSection(
       [['Weight','weight','text'],['Length','length','text'],['Folded Length','folded_length','text'],['Max Height','max_height','text'],['Folded Height','folded_height','text'],['# of Tires','num_tires','number'],['Front Tire PSI','front_tire_pressure','text'],['Rear Tire PSI','rear_tire_pressure','text'],['Tag Axle PSI','tag_axle_tire_pressure','text'],['Slide-Out Count','slide_out_count','number'],['Propane Tank','propane_tank','text'],['Fresh Water','fresh_water_capacity','text'],['Grey Water','grey_water_capacity','text'],['Black Water','black_water_capacity','text']],
       form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')},
       [['Hitch Type','hitch_type','select',HITCH_TYPES]]
     )))
-    c.appendChild(collapsible('','Leveling', vehicleEditSection(
+    c.appendChild(collapsible('⚖️','Leveling', vehicleEditSection(
       [['Side-to-Side','side_to_side_leveling','text'],['Front-to-Back','front_to_back_leveling','text']],
       form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')}
     )))
-    c.appendChild(collapsible('','Engine & Generator', vehicleEditSection(
+    c.appendChild(collapsible('⚙️','Engine & Generator', vehicleEditSection(
       [['Engine Serial Number','engine_serial','text'],['Generator Make / Model','generator_make_model','text'],['Generator Serial Number','generator_serial','text']],
       form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')}
     )))
   } else {
     // Vehicle-specific fields
-    c.appendChild(collapsible('','Specifications', vehicleEditSection(
+    c.appendChild(collapsible('📐','Specifications', vehicleEditSection(
       [['Towing Capacity','towing_capacity','text'],['GCWR','gcwr','text'],['Front Tire PSI','front_tire_pressure','text'],['Rear Tire PSI','rear_tire_pressure','text'],['# of Tires','num_tires','number']],
       form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')},
       [['Hitch Receiver Size','hitch_receiver_size','select',HITCH_SIZES]]
     )))
   }
 
-  c.appendChild(collapsible('','Contact Info', vehicleEditSection(
+  c.appendChild(collapsible('📞','Contact Info', vehicleEditSection(
     [['Dealer Contact','dealer_contact','textarea'],['Service Contact','service_contact','textarea'],['Manufacturer Contact','manufacturer_contact','textarea'],['Roadside Assistance','roadside_assistance','textarea']],
     form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')}
   )))
-  c.appendChild(collapsible('','Emergency Info', vehicleEditSection(
+  c.appendChild(collapsible('🚨','Emergency Info', vehicleEditSection(
     [['Insurance Policy Info','insurance_policy','textarea'],['Tire Replacement Type','tire_replacement','text'],['Tag Axle Tire Type','tag_axle_tire_replacement','text']],
     form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')}
   )))
-  c.appendChild(collapsible('','Notes', vehicleEditSection(
+  c.appendChild(collapsible('📝','Notes', vehicleEditSection(
     [['Notes','notes','textarea']],
     form, async updates=>{Object.assign(form,updates);await saveVehicle(type,form);toast('Saved')}
   )))
 
   // Maintenance Log
-  c.appendChild(collapsible('','Maintenance Log', maintenanceSection(vehicle?.id, type, logs, async()=>{
+  c.appendChild(collapsible('🔧','Maintenance Log', maintenanceSection(vehicle?.id, type, logs, async()=>{
     const {data:v}=await getSB().from('vehicles').select('id').eq('vehicle_type',type).maybeSingle()
     if(!v) return []
     const {data}=await getSB().from('maintenance_logs').select('*').eq('vehicle_id',v.id).order('date',{ascending:false})
@@ -2096,13 +2096,13 @@ function renderSettings() {
   const delConfirmI=textInput('DELETE','')
   const delMsg=div('',{style:'display:none'})
   const warning=div('',{style:'background:#fee2e2;border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px;color:#991b1b'})
-  warning.innerHTML='<strong>This will permanently delete:</strong><ul style="margin:6px 0 0 16px"><li>All your trips</li><li>All your stops and notes</li><li>All your photos</li><li>Your account</li></ul><p style="margin-top:6px"><strong>This cannot be undone.</strong></p>'
+  warning.innerHTML='<strong>⚠️ This will permanently delete:</strong><ul style="margin:6px 0 0 16px"><li>All your trips</li><li>All your stops and notes</li><li>All your photos</li><li>Your account</li></ul><p style="margin-top:6px"><strong>This cannot be undone.</strong></p>'
   delExpand.appendChild(warning)
   delExpand.appendChild(field('Type DELETE to confirm',delConfirmI))
   delExpand.appendChild(delMsg)
   delExpand.appendChild(div('btn-row',{style:'margin-top:8px'},
     btn('Cancel','gho',()=>{delExpand.style.display='none';expandedSection=null}),
-    btn('Delete Everything','dan',async()=>{
+    btn('🗑 Delete Everything','dan',async()=>{
       if(delConfirmI.value!=='DELETE'){delMsg.className='err-msg';delMsg.textContent='Type DELETE to confirm';delMsg.style.display='';return}
       const{error}=await getSB().rpc('delete_user')
       if(error){delMsg.className='err-msg';delMsg.textContent=error.message;delMsg.style.display=''}
@@ -2126,21 +2126,21 @@ function renderSettings() {
   }
 
   c.appendChild(settingsCard([
-    mkRow('','Change Name','#EEF2FB','',null,nameExpand), nameExpand,
+    mkRow('👤','Change Name','#EEF2FB','',null,nameExpand), nameExpand,
   ]))
   c.appendChild(settingsCard([
-    mkRow('','Change Password','#F5F3FF','',null,pwExpand), pwExpand,
+    mkRow('🔒','Change Password','#F5F3FF','',null,pwExpand), pwExpand,
   ]))
   c.appendChild(settingsCard([
-    mkRow('','Send Feedback','#EFF6FF','',()=>{openFeedback()})
+    mkRow('💬','Send Feedback','#EFF6FF','',()=>{openFeedback()})
   ]))
   c.appendChild(settingsCard([
-    mkRow('','Sign Out','var(--gray-100)','',async()=>{
+    mkRow('🚪','Sign Out','var(--gray-100)','',async()=>{
       await getSB().auth.signOut(); currentUser=null; showAuth()
     })
   ]))
   c.appendChild(settingsCard([
-    mkRow('','Delete Account','var(--red-lt)','var(--red)',null,delExpand), delExpand
+    mkRow('🗑','Delete Account','var(--red-lt)','var(--red)',null,delExpand), delExpand
   ]))
 
   c.appendChild(el('p',{txt:'My RV Journal • Version 1.09b',style:'text-align:center;font-size:12px;color:var(--gray-400);margin-top:24px'}))
@@ -2161,10 +2161,10 @@ function openFeedback() {
   c.appendChild(backBtn('Settings',()=>switchTab('settings')))
   c.appendChild(el('h1',{txt:'Send Feedback',style:'font-size:22px;font-weight:800;margin-bottom:4px'}))
   c.appendChild(el('p',{txt:"Bug reports, suggestions, or anything on your mind — we'd love to hear it.",style:'font-size:14px;color:var(--gray-500);margin-bottom:20px'}))
-  const catSel=selectInput([{value:'bug',label:'Bug Report'},{value:'suggestion',label:'Suggestion'},{value:'general',label:'General Feedback'},{value:'other',label:'Other'}],'')
+  const catSel=selectInput([{value:'bug',label:'🐛 Bug Report'},{value:'suggestion',label:'💡 Suggestion'},{value:'general',label:'💬 General Feedback'},{value:'other',label:'📝 Other'}],'')
   const msgI=textareaInput("Describe your feedback in as much detail as you'd like...",'',6)
   const errEl=div('err-msg'); errEl.style.display='none'
-  const sendBtn=btn('Send Feedback','pri full',async()=>{
+  const sendBtn=btn('📤 Send Feedback','pri full',async()=>{
     errEl.style.display='none'
     if(!catSel.value){errEl.textContent='Please select a category.';errEl.style.display='';return}
     if(msgI.value.trim().length<10){errEl.textContent='Please provide a bit more detail.';errEl.style.display='';return}
