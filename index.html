@@ -1148,6 +1148,32 @@ async function openStop(stopId) {
   const dr = fmtDateRange(stop.arrival_date,stop.departure_date)
   if (dr) sumBody.appendChild(el('p',{txt:dr,style:'font-size:13px;color:var(--gray-500);margin-bottom:6px'}))
 
+  // Address & Phone (tap to open maps / dialer)
+  if (stop.address || stop.phone) {
+    const contactWrap = div('',{style:'display:flex;flex-direction:column;gap:6px;margin-bottom:10px'})
+    if (stop.address) {
+      const addrLink = el('a',{
+        href:`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address)}`,
+        target:'_blank',
+        rel:'noopener',
+        style:'display:flex;align-items:center;gap:6px;font-size:13px;color:var(--blue);font-weight:600;text-decoration:none'
+      })
+      addrLink.appendChild(el('span',{txt:'📍'}))
+      addrLink.appendChild(el('span',{txt:stop.address,style:'text-decoration:underline'}))
+      contactWrap.appendChild(addrLink)
+    }
+    if (stop.phone) {
+      const phoneLink = el('a',{
+        href:`tel:${stop.phone.replace(/[^0-9+]/g,'')}`,
+        style:'display:flex;align-items:center;gap:6px;font-size:13px;color:var(--blue);font-weight:600;text-decoration:none'
+      })
+      phoneLink.appendChild(el('span',{txt:'📞'}))
+      phoneLink.appendChild(el('span',{txt:stop.phone,style:'text-decoration:underline'}))
+      contactWrap.appendChild(phoneLink)
+    }
+    sumBody.appendChild(contactWrap)
+  }
+
   // Rating
   let currentRating = stop.rating||0
   const ratingWrap = div('',{style:'margin-bottom:8px'})
@@ -1254,15 +1280,19 @@ function showEditStopModal(stop, onDone) {
   const nameI = textInput('Stop name', stop.name)
   const arrI = el('input',{type:'date',value:stop.arrival_date||''})
   const depI = el('input',{type:'date',value:stop.departure_date||''})
+  const addrI = textInput('123 Main St, Anytown, ST', stop.address||'')
+  const phoneI = textInput('(555) 123-4567', stop.phone||'')
   const errEl = div('err-msg'); errEl.style.display='none'
   const body = div('')
   body.appendChild(field('Stop Name', nameI))
   body.appendChild(div('grid2',field('Arrival',arrI),field('Departure',depI)))
+  body.appendChild(field('Address (optional)', addrI))
+  body.appendChild(field('Phone Number (optional)', phoneI))
   body.appendChild(errEl)
   const saveBtn2 = btn('Save','pri', async()=>{
     if (!nameI.value.trim()) { errEl.textContent='Name required'; errEl.style.display=''; return }
-        await getSB().from('stops').update({name:nameI.value.trim(),arrival_date:arrI.value||null,departure_date:depI.value||null,updated_at:new Date().toISOString()}).eq('id',stop.id)
-    ; closeModal(); toast('Saved'); onDone()
+    await getSB().from('stops').update({name:nameI.value.trim(),arrival_date:arrI.value||null,departure_date:depI.value||null,address:addrI.value.trim()||null,phone:phoneI.value.trim()||null,updated_at:new Date().toISOString()}).eq('id',stop.id)
+    closeModalDirect(); toast('Saved'); onDone()
   })
   openModal('Edit Stop', body, [btn('Cancel','gho',closeModalDirect), saveBtn2])
 }
@@ -1423,8 +1453,8 @@ function utilitiesSection(stopId, initial) {
     amp_50:initial?.amp_50??false,amp_30:initial?.amp_30??false,amp_20:initial?.amp_20??false,
     dump_station:initial?.dump_station||'',generator_rules:initial?.generator_rules||'',
     wifi_available:initial?.wifi_available??false,wifi_rating:initial?.wifi_rating??null,
-    cell_verizon:initial?.cell_verizon||'',cell_att:initial?.cell_att||'',
-    cell_tmobile:initial?.cell_tmobile||'',cell_other:initial?.cell_other||'',
+    cell_verizon_rating:initial?.cell_verizon_rating??null,cell_att_rating:initial?.cell_att_rating??null,
+    cell_tmobile_rating:initial?.cell_tmobile_rating??null,cell_other_rating:initial?.cell_other_rating??null,
     connectivity_notes:initial?.connectivity_notes||''
   }
   return sectionWrap('⚡','Utilities & Connectivity',
@@ -1457,18 +1487,23 @@ function utilitiesSection(stopId, initial) {
       wifiRatingWrap.appendChild(starRating(wifiRating,v=>{wifiRating=v},'sm'))
       container.appendChild(wifiRatingWrap)
       container.appendChild(el('div',{cls:'lbl',txt:'Cell Signal',style:'margin:10px 0 8px'}))
-      const vzI=textInput('Strong/Weak/None',data.cell_verizon)
-      const atI=textInput('Strong/Weak/None',data.cell_att)
-      const tmI=textInput('Strong/Weak/None',data.cell_tmobile)
-      const otI=textInput('Provider & signal',data.cell_other)
-      container.appendChild(div('grid2',field('Verizon',vzI),field('AT&T',atI)))
-      container.appendChild(div('grid2',field('T-Mobile',tmI),field('Other',otI)))
+      let vzRating=data.cell_verizon_rating, atRating=data.cell_att_rating, tmRating=data.cell_tmobile_rating, otRating=data.cell_other_rating
+      function cellRatingRow(label, val, setter) {
+        const w = div('',{style:'margin-bottom:10px'})
+        w.appendChild(el('div',{cls:'lbl',txt:label,style:'margin-bottom:4px'}))
+        w.appendChild(starRating(val, setter, 'sm'))
+        return w
+      }
+      container.appendChild(cellRatingRow('Verizon', vzRating, v=>vzRating=v))
+      container.appendChild(cellRatingRow('AT&T', atRating, v=>atRating=v))
+      container.appendChild(cellRatingRow('T-Mobile', tmRating, v=>tmRating=v))
+      container.appendChild(cellRatingRow('Other Provider', otRating, v=>otRating=v))
       const connI=textareaInput('',data.connectivity_notes,2)
       container.appendChild(field('Connectivity Notes',connI))
       container.appendChild(div('btn-row',{style:'margin-top:12px'},
         btn('Cancel','gho',done),
         btn('Save','pri',async()=>{
-          const saveData={...toggleState,dump_station:dumpI.value,generator_rules:genI.value,wifi_rating:wifiRating,cell_verizon:vzI.value,cell_att:atI.value,cell_tmobile:tmI.value,cell_other:otI.value,connectivity_notes:connI.value}
+          const saveData={...toggleState,dump_station:dumpI.value,generator_rules:genI.value,wifi_rating:wifiRating,cell_verizon_rating:vzRating,cell_att_rating:atRating,cell_tmobile_rating:tmRating,cell_other_rating:otRating,connectivity_notes:connI.value}
           Object.assign(data,saveData)
                     await getSB().from('stop_utilities').upsert({stop_id:stopId,...saveData},{onConflict:'stop_id'})
           ; toast('Saved'); done()
@@ -1478,20 +1513,27 @@ function utilitiesSection(stopId, initial) {
     container => {
       const hookups=[data.full_hookup&&'Full Hookup',data.has_water&&'Water',data.has_electric&&'Electric',data.has_sewer&&'Sewer',data.dry_camping&&'Dry Camping'].filter(Boolean)
       const amps=[data.amp_50&&'50 Amp',data.amp_30&&'30 Amp',data.amp_20&&'20 Amp'].filter(Boolean)
-      const hasContent=hookups.length||amps.length||data.dump_station||data.generator_rules||data.wifi_available||data.cell_verizon||data.cell_att||data.cell_tmobile||data.cell_other||data.connectivity_notes
+      const hasContent=hookups.length||amps.length||data.dump_station||data.generator_rules||data.wifi_available||data.cell_verizon_rating||data.cell_att_rating||data.cell_tmobile_rating||data.cell_other_rating||data.connectivity_notes
       if(!hasContent){container.appendChild(el('p',{cls:'empty-msg',txt:'No utilities info yet.'}));return}
       if(hookups.length){const d2=div('read-row');d2.appendChild(el('div',{cls:'read-lbl',txt:'Hookups'}));const tw=div('toggles-wrap');for(const h of hookups)tw.appendChild(chip(h));d2.appendChild(tw);container.appendChild(d2)}
       if(amps.length){const d2=div('read-row');d2.appendChild(el('div',{cls:'read-lbl',txt:'Electrical'}));const tw=div('toggles-wrap');for(const a of amps)tw.appendChild(chip(a));d2.appendChild(tw);container.appendChild(d2)}
       const r1=readRow('Dump Station',data.dump_station);if(r1)container.appendChild(r1)
       const r2=readRow('Generator Rules',data.generator_rules);if(r2)container.appendChild(r2)
       if(data.wifi_available){const d2=div('read-row');d2.appendChild(el('div',{cls:'read-lbl',txt:'Wi-Fi'}));const tw=div('toggles-wrap');tw.appendChild(chip('Available'));if(data.wifi_rating)tw.appendChild(el('span',{txt:'★'.repeat(data.wifi_rating)+'☆'.repeat(5-data.wifi_rating),style:'font-size:14px;color:#f59e0b'}));d2.appendChild(tw);container.appendChild(d2)}
-      if(data.cell_verizon||data.cell_att||data.cell_tmobile||data.cell_other){
+      if(data.cell_verizon_rating||data.cell_att_rating||data.cell_tmobile_rating||data.cell_other_rating){
         container.appendChild(el('div',{cls:'read-lbl',txt:'Cell Signal',style:'margin-bottom:6px'}))
+        function cellReadRow(label, val) {
+          if (!val) return null
+          const d2 = div('read-row')
+          d2.appendChild(el('div',{cls:'read-lbl',txt:label}))
+          d2.appendChild(el('span',{txt:'★'.repeat(val)+'☆'.repeat(5-val),style:'font-size:14px;color:#f59e0b'}))
+          return d2
+        }
         const g=div('read-grid')
-        const rc=readRow('Verizon',data.cell_verizon);if(rc)g.appendChild(rc)
-        const rc2=readRow('AT&T',data.cell_att);if(rc2)g.appendChild(rc2)
-        const rc3=readRow('T-Mobile',data.cell_tmobile);if(rc3)g.appendChild(rc3)
-        const rc4=readRow('Other',data.cell_other);if(rc4)g.appendChild(rc4)
+        const rc=cellReadRow('Verizon',data.cell_verizon_rating);if(rc)g.appendChild(rc)
+        const rc2=cellReadRow('AT&T',data.cell_att_rating);if(rc2)g.appendChild(rc2)
+        const rc3=cellReadRow('T-Mobile',data.cell_tmobile_rating);if(rc3)g.appendChild(rc3)
+        const rc4=cellReadRow('Other',data.cell_other_rating);if(rc4)g.appendChild(rc4)
         container.appendChild(g)
       }
       const r3=readRow('Connectivity Notes',data.connectivity_notes);if(r3)container.appendChild(r3)
@@ -1620,20 +1662,39 @@ function travelSection(stopId, initial) {
 }
 
 // ── VEHICLES ──────────────────────────────────────────────
-function renderVehicles() {
+async function renderVehicles() {
   const c = document.getElementById('vehicles-content')
   c.innerHTML = ''
   c.classList.add('fade-in')
   c.appendChild(el('h1',{txt:'Vehicles',style:'font-size:22px;font-weight:800;margin-bottom:16px;padding-top:4px'}))
 
+  // Skeleton while loading
+  const skelWrap = div('')
+  for (let i=0;i<2;i++){ const s=div('skeleton'); s.style.cssText='height:76px;margin-bottom:10px;border-radius:14px'; skelWrap.appendChild(s) }
+  c.appendChild(skelWrap)
+
+  const [{data:camper},{data:vehicle}] = await Promise.all([
+    getSB().from('vehicles').select('name,photo_path').eq('vehicle_type','camper').maybeSingle(),
+    getSB().from('vehicles').select('name,photo_path').eq('vehicle_type','vehicle').maybeSingle()
+  ])
+
+  skelWrap.remove()
+
   const cards = [
-    {icon:'🚌', title:'My Camper / RV', sub:'Specs, registration, leveling & more', page:'camper-page', fn:openCamper},
-    {icon:'🛻', title:'Tow Vehicle', sub:'Truck, SUV or car details', page:'vehicle-page', fn:openVehicle},
+    {fallbackIcon:'🚌', title: camper?.name || 'Camper / RV', sub:'Specs, registration, leveling & more', photoPath: camper?.photo_path, fn:openCamper},
+    {fallbackIcon:'🛻', title: vehicle?.name || 'Other Vehicle', sub:'Truck, SUV or car details', photoPath: vehicle?.photo_path, fn:openVehicle},
   ]
   for(const card of cards) {
     const c2 = div('card card-tap')
     const body = div('card-body', {style:'display:flex;align-items:center;gap:14px'})
-    body.appendChild(el('div',{txt:card.icon,style:'font-size:32px;flex-shrink:0'}))
+    if (card.photoPath) {
+      const {data} = getSB().storage.from('photos').getPublicUrl(card.photoPath)
+      const thumb = div('',{style:'width:48px;height:48px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--gray-100)'})
+      thumb.appendChild(el('img',{src:data.publicUrl,style:'width:100%;height:100%;object-fit:cover;display:block'}))
+      body.appendChild(thumb)
+    } else {
+      body.appendChild(el('div',{txt:card.fallbackIcon,style:'font-size:32px;flex-shrink:0'}))
+    }
     const info = div('')
     info.appendChild(el('div',{txt:card.title,style:'font-size:15px;font-weight:700;color:var(--gray-900)'}))
     info.appendChild(el('div',{txt:card.sub,style:'font-size:12px;color:var(--gray-500);margin-top:2px'}))
@@ -1645,8 +1706,8 @@ function renderVehicles() {
   }
 }
 
-async function openCamper() { await openVehiclePage('camper','camper-page','camper-content','🚌 My Camper / RV') }
-async function openVehicle() { await openVehiclePage('vehicle','vehicle-page','vehicle-content','🛻 Tow Vehicle') }
+async function openCamper() { await openVehiclePage('camper','camper-page','camper-content','Camper / RV') }
+async function openVehicle() { await openVehiclePage('vehicle','vehicle-page','vehicle-content','Other Vehicle') }
 
 const MAINTENANCE_TYPES=[{value:'oil_change',label:'🔧 Oil Change'},{value:'tire_rotation',label:'🔄 Tire Rotation'},{value:'inspection',label:'🔍 Inspection'},{value:'repair',label:'🛠️ Repair'},{value:'other',label:'📝 Other'}]
 const CAMPER_TYPES=[{value:'Class A',label:'Class A'},{value:'Class B',label:'Class B'},{value:'Class C',label:'Class C'},{value:'Fifth Wheel',label:'Fifth Wheel'},{value:'Travel Trailer',label:'Travel Trailer'},{value:'Pop-Up',label:'Pop-Up'},{value:'Toy Hauler',label:'Toy Hauler'},{value:'Other',label:'Other'}]
@@ -2023,6 +2084,8 @@ function renderSettings() {
 
   c.appendChild(settingsCard([
     mkRow('👤','Change Name','#EEF2FB','',null,nameExpand), nameExpand,
+  ]))
+  c.appendChild(settingsCard([
     mkRow('🔒','Change Password','#F5F3FF','',null,pwExpand), pwExpand,
   ]))
   c.appendChild(settingsCard([
